@@ -1,0 +1,21 @@
+<Request>
+  <PK_Type>LOGIN</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <Password>7a3b5c8e2f1d4a6b9c0d3e5f7a8b9c0d</Password>
+    <FSUID>FSU-001-BJ-CHAOYANG</FSUID>
+    <DeviceID>FSU-001-01</DeviceID>
+    <Timestamp>2026-05-13T10:30:00+08:00</Timestamp>
+    <ProtocolVersion>B-2016</ProtocolVersion>
+  </Info>
+  <xmlData>
+    <DeviceInfo>
+      <Manufacturer>中兴</Manufacturer>
+      <Model>eStone II</Model>
+      <FirmwareVersion>B07D07</FirmwareVersion>
+      <HardwareVersion>HW-2.1</HardwareVersion>
+      <MacAddr>AA:BB:CC:DD:EE:01</MacAddr>
+      <IPAddr>192.168.1.101</IPAddr>
+    </DeviceInfo>
+  </xmlData>
+</Request>

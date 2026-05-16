@@ -1,0 +1,78 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dcim-platform
+  profiles:
+    active: dev
+
+b-interface:
+  offline-detection:
+    enabled: false
+    heartbeat-timeout-seconds: 300
+    scan-interval-seconds: 60
+  fsu-client:
+    real-call-enabled: false
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
+  set-threshold:
+    enabled: false
+    require-confirmation: true
+  slow-polling:
+    enabled: false
+    scheduler-enabled: false
+    allow-real-call: false
+    poll-get-data: true
+    poll-get-threshold: false
+    interval-seconds: 300
+    max-fsu-per-run: 50
+  set-command-safety:
+    enabled: false
+    allow-real-call: false
+    require-confirmation: true
+    audit-required: true
+    single-fsu-only: true
+    scheduler-forbidden: true
+    dry-run-default: true
+    commands:
+      set-time:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-spconfigoption:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-rmctrlcmd:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-suftp:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-sureboot:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-scip:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-schemeconfig:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true
+      set-factoryconfig:
+        enabled: false
+        allow-real-call: false
+        require-confirmation: true
+        audit-required: true

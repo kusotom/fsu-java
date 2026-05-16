@@ -1,0 +1,20 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type>GET_LOGININFO</PK_Type>
+      <Info>
+        <ResultCode>0</ResultCode>
+      </Info>
+      <xmlData>
+        <LoginInfo>
+          <FSUCode>FSU-001</FSUCode>
+          <LoginStatus>LOGIN</LoginStatus>
+          <OnlineStatus>ONLINE</OnlineStatus>
+          <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+          <LoginTime>2026-05-13T10:30:00+08:00</LoginTime>
+          <LastHeartbeat>2026-05-13T10:40:00+08:00</LastHeartbeat>
+        </LoginInfo>
+      </xmlData>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

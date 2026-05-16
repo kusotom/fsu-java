@@ -1,0 +1,8 @@
+{
+  "pkType": "SEND_ALARM",
+  "info": {
+    "resultCode": 0,
+    "alarmId": "10001"
+  },
+  "xmlData": null
+}

@@ -1,0 +1,14 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type>GET_FTP</PK_Type>
+      <Info>
+        <FSUCode>FSU-001</FSUCode>
+        <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+        <RequestTime>2026-05-13T10:39:00+08:00</RequestTime>
+        <FileType>IMAGE</FileType>
+      </Info>
+      <xmlData/>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

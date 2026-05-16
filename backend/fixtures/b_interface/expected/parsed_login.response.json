@@ -1,0 +1,10 @@
+{
+  "pkType": "LOGIN",
+  "info": {
+    "resultCode": 0,
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "expireSeconds": 3600,
+    "serverTime": "2026-05-13T10:30:05+08:00"
+  },
+  "xmlData": null
+}

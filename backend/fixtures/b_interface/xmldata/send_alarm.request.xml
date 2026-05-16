@@ -1,0 +1,19 @@
+<Request>
+  <PK_Type>SEND_ALARM</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <AlarmTime>2026-05-13T10:33:00+08:00</AlarmTime>
+  </Info>
+  <xmlData>
+    <Alarm>
+      <SignalID>TEMP-001</SignalID>
+      <AlarmCode>TEMP-HIGH</AlarmCode>
+      <AlarmName>机柜温度过高</AlarmName>
+      <AlarmLevel>WARN</AlarmLevel>
+      <AlarmValue>62.0</AlarmValue>
+      <AlarmDesc>温度超过上限60°C</AlarmDesc>
+      <AlarmType>0</AlarmType>
+    </Alarm>
+  </xmlData>
+</Request>

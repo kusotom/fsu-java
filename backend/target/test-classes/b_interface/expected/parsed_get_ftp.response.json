@@ -1,0 +1,15 @@
+{
+  "pkType": "GET_FTP",
+  "info": {
+    "resultCode": 0
+  },
+  "xmlData": {
+    "ftpConfig": {
+      "host": "192.168.1.200",
+      "port": 21,
+      "username": "fsu_ftp",
+      "passiveMode": true,
+      "basePath": "/fsu/images/"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<Request>
+  <PK_Type>HEARTBEAT</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <Timestamp>2026-05-13T10:31:00+08:00</Timestamp>
+  </Info>
+  <xmlData>
+    <CPU>35</CPU>
+    <Memory>62</Memory>
+    <Temperature>42</Temperature>
+    <RunningTime>3600</RunningTime>
+  </xmlData>
+</Request>

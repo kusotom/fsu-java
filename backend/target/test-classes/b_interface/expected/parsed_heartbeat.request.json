@@ -1,0 +1,14 @@
+{
+  "pkType": "HEARTBEAT",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "timestamp": "2026-05-13T10:31:00+08:00"
+  },
+  "xmlData": {
+    "cpu": 35,
+    "memory": 62,
+    "temperature": 42,
+    "runningTime": 3600
+  }
+}

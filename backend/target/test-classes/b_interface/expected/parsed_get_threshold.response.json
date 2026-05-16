@@ -1,0 +1,14 @@
+{
+  "pkType": "GET_THRESHOLD",
+  "info": {
+    "resultCode": 0,
+    "count": 3
+  },
+  "xmlData": {
+    "signals": [
+      {"signalId": "TEMP-001", "alarmUpper": 60.0, "alarmLower": -5.0, "alarmUpperUrgent": 70.0, "alarmLowerUrgent": -10.0},
+      {"signalId": "HUMI-001", "alarmUpper": 90.0, "alarmLower": 10.0, "alarmUpperUrgent": 95.0, "alarmLowerUrgent": 5.0},
+      {"signalId": "VOLT-001", "alarmUpper": 245.0, "alarmLower": 198.0, "alarmUpperUrgent": 260.0, "alarmLowerUrgent": 185.0}
+    ]
+  }
+}

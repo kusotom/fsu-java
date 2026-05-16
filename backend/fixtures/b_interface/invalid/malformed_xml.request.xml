@@ -1,0 +1,11 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type>LOGIN</PK_Type>
+      <Info>
+        <FSUCode>FSU-001</FSUCode>
+        <!-- 未闭合的标签 -->
+        <Timestamp>2026-05-13T10:30:00+08:00
+    </Request>
+  </soap:Body>
+</soap:Envelope>

@@ -1,0 +1,18 @@
+<Request>
+  <PK_Type>SET_FTP</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <RequestTime>2026-05-13T10:40:00+08:00</RequestTime>
+  </Info>
+  <xmlData>
+    <FTPConfig>
+      <Host>192.168.1.201</Host>
+      <Port>21</Port>
+      <Username>fsu_ftp_new</Username>
+      <Password>new_ftp_pass_2026</Password>
+      <PassiveMode>true</PassiveMode>
+      <BasePath>/fsu/images/</BasePath>
+    </FTPConfig>
+  </xmlData>
+</Request>

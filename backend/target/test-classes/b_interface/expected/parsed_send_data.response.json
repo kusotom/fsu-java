@@ -1,0 +1,8 @@
+{
+  "pkType": "SEND_DATA",
+  "info": {
+    "resultCode": 0,
+    "count": 5
+  },
+  "xmlData": null
+}

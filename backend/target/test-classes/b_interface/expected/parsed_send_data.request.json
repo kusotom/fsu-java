@@ -1,0 +1,17 @@
+{
+  "pkType": "SEND_DATA",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "collectTime": "2026-05-13T10:32:00+08:00"
+  },
+  "xmlData": {
+    "signals": [
+      {"signalId": "TEMP-001", "value": "25.5", "quality": 1, "status": "NORMAL"},
+      {"signalId": "HUMI-001", "value": "55.0", "quality": 1, "status": "NORMAL"},
+      {"signalId": "VOLT-001", "value": "220.5", "quality": 1, "status": "NORMAL"},
+      {"signalId": "DOOR-001", "value": "CLOSE", "quality": 1, "status": "NORMAL"},
+      {"signalId": "WATER-001", "value": "DRY", "quality": 1, "status": "NORMAL"}
+    ]
+  }
+}

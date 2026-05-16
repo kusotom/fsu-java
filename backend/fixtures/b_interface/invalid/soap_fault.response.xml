@@ -1,0 +1,14 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <soap:Fault>
+      <faultcode>soap:Server</faultcode>
+      <faultstring>服务器内部错误</faultstring>
+      <detail>
+        <error>
+          <code>5001</code>
+          <message>数据库连接失败</message>
+        </error>
+      </detail>
+    </soap:Fault>
+  </soap:Body>
+</soap:Envelope>

@@ -1,0 +1,17 @@
+<Request>
+  <PK_Type>SET_THRESHOLD</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <RequestTime>2026-05-13T10:37:00+08:00</RequestTime>
+  </Info>
+  <xmlData>
+    <Signal>
+      <SignalID>TEMP-001</SignalID>
+      <AlarmUpper>65.0</AlarmUpper>
+      <AlarmLower>-5.0</AlarmLower>
+      <AlarmUpperUrgent>75.0</AlarmUpperUrgent>
+      <AlarmLowerUrgent>-10.0</AlarmLowerUrgent>
+    </Signal>
+  </xmlData>
+</Request>

@@ -1,0 +1,21 @@
+{
+  "pkType": "LOGIN",
+  "info": {
+    "fsuCode": "FSU-001",
+    "password": "7a3b5c8e2f1d4a6b9c0d3e5f7a8b9c0d",
+    "fsuId": "FSU-001-BJ-CHAOYANG",
+    "deviceId": "FSU-001-01",
+    "timestamp": "2026-05-13T10:30:00+08:00",
+    "protocolVersion": "B-2016"
+  },
+  "xmlData": {
+    "deviceInfo": {
+      "manufacturer": "中兴",
+      "model": "eStone II",
+      "firmwareVersion": "B07D07",
+      "hardwareVersion": "HW-2.1",
+      "macAddr": "AA:BB:CC:DD:EE:01",
+      "ipAddr": "192.168.1.101"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "pkType": "SET_POINT",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "requestTime": "2026-05-13T10:38:00+08:00"
+  },
+  "xmlData": {
+    "signals": [
+      {"signalId": "VOLT-001", "setValue": "230.0", "operator": "admin"}
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+<Response>
+  <PK_Type>LOGIN</PK_Type>
+  <Info>
+    <ResultCode>0</ResultCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <ExpireSeconds>3600</ExpireSeconds>
+    <ServerTime>2026-05-13T10:30:05+08:00</ServerTime>
+  </Info>
+  <xmlData/>
+</Response>

@@ -1,0 +1,134 @@
+package com.dcim.platform.module.binterface.service;
+
+import com.dcim.platform.module.binterface.model.BInterfacePkType;
+import com.dcim.platform.module.binterface.service.fsu.FsuEndpointResolver;
+import com.dcim.platform.module.binterface.service.fsu.FsuEndpointResult;
+import com.dcim.platform.module.binterface.service.fsu.FsuServiceClient;
+import com.dcim.platform.module.binterface.service.fsu.FsuServiceRequest;
+import com.dcim.platform.module.binterface.service.fsu.FsuServiceResponse;
+import com.dcim.platform.module.binterface.xml.XmlDataModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * GET_LOGININFO 登录信息查询服务。
+ *
+ * <p>SC 主动向 FSU 查询 FSU 的登录状态和在线信息。
+ * 通过 FsuServiceClient 发送 SOAP 请求到 FSUService，解析响应返回登录信息。</p>
+ *
+ * <p>边界：</p>
+ * <ul>
+ *   <li>GET_LOGININFO：SC→FSU，只读查询，不修改 FSU 状态</li>
+ *   <li>本服务不调用 LoginService，不修改登录状态</li>
+ *   <li>本服务不输出明文密码</li>
+ * </ul>
+ */
+@Service
+public class GetLoginInfoService {
+
+    private static final Logger log = LoggerFactory.getLogger(GetLoginInfoService.class);
+
+    private final FsuServiceClient fsuServiceClient;
+    private final FsuEndpointResolver fsuEndpointResolver;
+
+    public GetLoginInfoService(FsuServiceClient fsuServiceClient, FsuEndpointResolver fsuEndpointResolver) {
+        this.fsuServiceClient = fsuServiceClient;
+        this.fsuEndpointResolver = fsuEndpointResolver;
+    }
+
+    /**
+     * 执行 GET_LOGININFO 查询。
+     *
+     * @param fsuCode       FSU 编码
+     * @param fsuServiceUrl FSU 服务地址（可为 null）
+     * @return 登录信息查询结果
+     */
+    public GetLoginInfoResult execute(String fsuCode, String fsuServiceUrl) {
+        if (fsuCode == null || fsuCode.trim().isEmpty()) {
+            return GetLoginInfoResult.fail("2001", "缺少 FSUCode");
+        }
+
+        // 解析 FSU endpoint（未显式指定时从数据库获取）
+        String effectiveServiceUrl = fsuServiceUrl;
+        if (effectiveServiceUrl == null && fsuEndpointResolver != null) {
+            FsuEndpointResult endpoint = fsuEndpointResolver.resolve(fsuCode);
+            if (!endpoint.isSuccess()) {
+                log.warn("FSU endpoint 解析失败: fsuCode={}, resultCode={}, desc={}",
+                        fsuCode, endpoint.getResultCode(), endpoint.getResultDesc());
+                return GetLoginInfoResult.fail(endpoint.getResultCode(), endpoint.getResultDesc(), fsuCode);
+            }
+            effectiveServiceUrl = endpoint.getServiceUrl();
+            log.debug("FSU endpoint 解析成功: fsuCode={}, url={}", fsuCode, effectiveServiceUrl);
+        }
+
+        try {
+            // 1. 构造 Info 字段
+            String infoXml = "<FSUCode>" + fsuCode + "</FSUCode>";
+
+            // 2. 构造 FsuServiceRequest（GET_LOGININFO 无 xmlData）
+            FsuServiceRequest request = FsuServiceRequest.builder()
+                    .fsuCode(fsuCode)
+                    .serviceUrl(effectiveServiceUrl)
+                    .pkType(BInterfacePkType.GET_LOGININFO)
+                    .infoXml(infoXml)
+                    .build();
+
+            // 3. 调用 FSUService
+            FsuServiceResponse response = fsuServiceClient.call(request);
+
+            if (!response.isSuccess()) {
+                log.warn("GET_LOGININFO FSUService 调用失败: fsuCode={}, resultCode={}, desc={}",
+                        fsuCode, response.getResultCode(), response.getResultDesc());
+                return GetLoginInfoResult.fail(response.getResultCode(),
+                        response.getResultDesc() != null ? response.getResultDesc() : "FSU 查询失败", fsuCode);
+            }
+
+            // 4. 解析响应 xmlData
+            XmlDataModel xmlData = response.getXmlData();
+            if (xmlData == null || xmlData.isEmpty()) {
+                log.warn("GET_LOGININFO 响应无数据: fsuCode={}", fsuCode);
+                return GetLoginInfoResult.fail("2003", "无有效响应数据", fsuCode);
+            }
+
+            // 5. 提取 LoginInfo 字段（包裹模式：单个 item 含所有子字段）
+            List<Map<String, String>> items = xmlData.getItems();
+            if (items == null || items.isEmpty()) {
+                log.warn("GET_LOGININFO 响应无 LoginInfo: fsuCode={}", fsuCode);
+                return GetLoginInfoResult.fail("2003", "响应缺少 LoginInfo", fsuCode);
+            }
+
+            Map<String, String> loginInfo = items.get(0);
+            String loginStatus = getField(loginInfo, "LoginStatus");
+            String onlineStatus = getField(loginInfo, "OnlineStatus");
+            String sessionId = getField(loginInfo, "SessionID");
+            String loginTime = getField(loginInfo, "LoginTime");
+            String lastHeartbeat = getField(loginInfo, "LastHeartbeat");
+
+            log.debug("GET_LOGININFO 成功: fsuCode={}, loginStatus={}, onlineStatus={}",
+                    fsuCode, loginStatus, onlineStatus);
+
+            return GetLoginInfoResult.success(fsuCode, loginStatus, onlineStatus,
+                    sessionId, loginTime, lastHeartbeat);
+
+        } catch (Exception e) {
+            log.error("GET_LOGININFO 处理异常: fsuCode={}", fsuCode, e);
+            return GetLoginInfoResult.fail("5001", "查询异常: " + e.getMessage(), fsuCode);
+        }
+    }
+
+    private String getField(Map<String, String> map, String key) {
+        if (map == null || key == null) return null;
+        String v = map.get(key);
+        if (v != null) return v.trim();
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            if (e.getKey().equalsIgnoreCase(key)) {
+                return e.getValue() != null ? e.getValue().trim() : null;
+            }
+        }
+        return null;
+    }
+}

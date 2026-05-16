@@ -1,0 +1,21 @@
+{
+  "pkType": "SEND_ALARM",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "alarmTime": "2026-05-13T10:33:00+08:00"
+  },
+  "xmlData": {
+    "alarms": [
+      {
+        "signalId": "TEMP-001",
+        "alarmCode": "TEMP-HIGH",
+        "alarmName": "机柜温度过高",
+        "alarmLevel": "WARN",
+        "alarmValue": "62.0",
+        "alarmDesc": "温度超过上限60°C",
+        "alarmType": 0
+      }
+    ]
+  }
+}

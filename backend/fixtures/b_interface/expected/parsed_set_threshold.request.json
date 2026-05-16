@@ -1,0 +1,13 @@
+{
+  "pkType": "SET_THRESHOLD",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "requestTime": "2026-05-13T10:37:00+08:00"
+  },
+  "xmlData": {
+    "signals": [
+      {"signalId": "TEMP-001", "alarmUpper": 65.0, "alarmLower": -5.0, "alarmUpperUrgent": 75.0, "alarmLowerUrgent": -10.0}
+    ]
+  }
+}

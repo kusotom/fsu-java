@@ -1,0 +1,12 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type>UNKNOWN_COMMAND_99</PK_Type>
+      <Info>
+        <FSUCode>FSU-999</FSUCode>
+        <Timestamp>2026-05-13T10:00:00+08:00</Timestamp>
+      </Info>
+      <xmlData/>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

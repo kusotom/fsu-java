@@ -1,0 +1,11 @@
+{
+  "pkType": "GET_DATA",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "requestTime": "2026-05-13T10:35:00+08:00"
+  },
+  "xmlData": {
+    "signalIds": ["TEMP-001", "HUMI-001", "VOLT-001", "DOOR-001", "WATER-001"]
+  }
+}

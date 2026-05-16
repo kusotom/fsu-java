@@ -1,0 +1,15 @@
+<Request>
+  <PK_Type>GET_DATA</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <RequestTime>2026-05-13T10:35:00+08:00</RequestTime>
+  </Info>
+  <xmlData>
+    <SignalID>TEMP-001</SignalID>
+    <SignalID>HUMI-001</SignalID>
+    <SignalID>VOLT-001</SignalID>
+    <SignalID>DOOR-001</SignalID>
+    <SignalID>WATER-001</SignalID>
+  </xmlData>
+</Request>

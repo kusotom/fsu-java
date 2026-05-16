@@ -1,0 +1,8 @@
+{
+  "pkType": "SET_POINT",
+  "info": {
+    "resultCode": 0,
+    "signalId": "VOLT-001"
+  },
+  "xmlData": null
+}

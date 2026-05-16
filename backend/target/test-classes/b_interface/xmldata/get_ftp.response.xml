@@ -1,0 +1,15 @@
+<Response>
+  <PK_Type>GET_FTP</PK_Type>
+  <Info>
+    <ResultCode>0</ResultCode>
+  </Info>
+  <xmlData>
+    <FTPConfig>
+      <Host>192.168.1.200</Host>
+      <Port>21</Port>
+      <Username>fsu_ftp</Username>
+      <PassiveMode>true</PassiveMode>
+      <BasePath>/fsu/images/</BasePath>
+    </FTPConfig>
+  </xmlData>
+</Response>

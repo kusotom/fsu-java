@@ -1,0 +1,15 @@
+<Request>
+  <PK_Type>SET_POINT</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+    <SessionID>SESSION-FSU-001-20260513-A3B8</SessionID>
+    <RequestTime>2026-05-13T10:38:00+08:00</RequestTime>
+  </Info>
+  <xmlData>
+    <Signal>
+      <SignalID>VOLT-001</SignalID>
+      <SetValue>230.0</SetValue>
+      <Operator>admin</Operator>
+    </Signal>
+  </xmlData>
+</Request>

@@ -1,0 +1,8 @@
+<Response>
+  <PK_Type>SEND_ALARM</PK_Type>
+  <Info>
+    <ResultCode>0</ResultCode>
+    <AlarmID>10001</AlarmID>
+  </Info>
+  <xmlData/>
+</Response>

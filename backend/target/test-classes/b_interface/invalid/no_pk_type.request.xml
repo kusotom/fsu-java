@@ -1,0 +1,11 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <Info>
+        <FSUCode>FSU-001</FSUCode>
+        <Timestamp>2026-05-13T10:31:00+08:00</Timestamp>
+      </Info>
+      <xmlData/>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

@@ -1,0 +1,8 @@
+<Response>
+  <PK_Type>SET_POINT</PK_Type>
+  <Info>
+    <ResultCode>0</ResultCode>
+    <SignalID>VOLT-001</SignalID>
+  </Info>
+  <xmlData/>
+</Response>

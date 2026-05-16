@@ -1,0 +1,8 @@
+<Response>
+  <PK_Type>HEARTBEAT</PK_Type>
+  <Info>
+    <ResultCode>0</ResultCode>
+    <ServerTime>2026-05-13T10:31:05+08:00</ServerTime>
+  </Info>
+  <xmlData/>
+</Response>

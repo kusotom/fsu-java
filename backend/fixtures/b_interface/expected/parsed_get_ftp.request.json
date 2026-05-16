@@ -1,0 +1,10 @@
+{
+  "pkType": "GET_FTP",
+  "info": {
+    "fsuCode": "FSU-001",
+    "sessionId": "SESSION-FSU-001-20260513-A3B8",
+    "requestTime": "2026-05-13T10:39:00+08:00",
+    "fileType": "IMAGE"
+  },
+  "xmlData": null
+}
