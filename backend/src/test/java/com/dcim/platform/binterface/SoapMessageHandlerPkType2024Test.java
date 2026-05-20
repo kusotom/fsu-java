@@ -142,6 +142,57 @@ class SoapMessageHandlerPkType2024Test {
         assertTrue(msg.getPkTypeDescriptor().isCompatCommand());
     }
 
+    // ==================== LANDING-004: buildRequest 双格式输出测试 ====================
+
+    @Test
+    void shouldBuildRequestWithStructuredPkType() {
+        String result = handler.buildRequest("GET_DATA", 501,
+                "<FSUCode>FSU-001</FSUCode>", "<SignalID>TEMP-001</SignalID>");
+        assertTrue(result.contains("<PK_Type>"), "应包含 PK_Type");
+        assertTrue(result.contains("<Name>GET_DATA</Name>"), "应包含 Name 元素");
+        assertTrue(result.contains("<Code>501</Code>"), "应包含 Code 元素");
+        assertTrue(result.contains("TEMP-001"), "应保留 xmlData");
+    }
+
+    @Test
+    void shouldBuildRequestWithLegacyPkType() {
+        String result = handler.buildRequest("GET_DATA", null,
+                "<FSUCode>FSU-001</FSUCode>", "<SignalID>TEMP-001</SignalID>");
+        assertTrue(result.contains("<PK_Type>GET_DATA</PK_Type>"), "应为纯文本 PK_Type");
+        assertFalse(result.contains("<Name>"), "不应包含 Name 元素");
+        assertFalse(result.contains("<Code>"), "不应包含 Code 元素");
+    }
+
+    @Test
+    void legacyFormatShouldNotContainNameCodeElements() {
+        // 验证所有 5 个允许重试的命令在 legacy 格式下均不含 Name/Code
+        String[] commands = {"GET_SUINFO", "GET_DATA", "GET_ACTIVEALARM", "GET_SPCONFIGOPTION", "GET_THRESHOLD"};
+        for (String cmd : commands) {
+            String result = handler.buildRequest(cmd, null, "<SUID>TEST</SUID>", null);
+            assertTrue(result.contains("<PK_Type>" + cmd + "</PK_Type>"),
+                    cmd + " legacy 格式应为纯文本 PK_Type");
+            assertFalse(result.contains("<Name>"), cmd + " legacy 格式不应有 Name");
+            assertFalse(result.contains("<Code>"), cmd + " legacy 格式不应有 Code");
+        }
+    }
+
+    @Test
+    void structuredFormatShouldContainNameAndCode() {
+        // 验证 structured 格式包含 Name+Code
+        String result = handler.buildRequest("GET_ACTIVEALARM", 603,
+                "<SUID>TEST</SUID>", null);
+        assertTrue(result.contains("<Name>GET_ACTIVEALARM</Name>"));
+        assertTrue(result.contains("<Code>603</Code>"));
+    }
+
+    @Test
+    void legacyGetActiveAlarmShouldStillContainCommandName() {
+        String result = handler.buildRequest("GET_ACTIVEALARM", null,
+                "<SUID>TEST</SUID>", null);
+        assertTrue(result.contains("GET_ACTIVEALARM"), "legacy 格式应包含命令名");
+        assertFalse(result.contains("<Name>"), "legacy 格式不应有结构化 Name");
+    }
+
     // ==================== 辅助 ====================
 
     private String docStyleEnvelope(String innerXml) {

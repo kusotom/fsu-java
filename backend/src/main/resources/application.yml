@@ -19,6 +19,10 @@ b-interface:
   set-threshold:
     enabled: false
     require-confirmation: true
+  active-alarm-audit:
+    scheduler-enabled: false
+    fixed-delay-ms: 300000
+    initial-delay-ms: 60000
   slow-polling:
     enabled: false
     scheduler-enabled: false

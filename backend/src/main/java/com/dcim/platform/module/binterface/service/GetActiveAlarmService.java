@@ -62,7 +62,7 @@ public class GetActiveAlarmService {
 
             XmlDataModel xd = resp.getXmlData();
             if (xd == null || xd.isEmpty())
-                return GetActiveAlarmResult.success(suid, List.of(), 0, 0, 0);
+                return GetActiveAlarmResult.success(suid, List.of(), 0, 0, 0, resp.isRealCall());
 
             List<Map<String, String>> items = xd.getItems();
             List<GetActiveAlarmResult.ActiveAlarmItem> alarms = new ArrayList<>();
@@ -80,7 +80,7 @@ public class GetActiveAlarmService {
                 }
             }
 
-            return GetActiveAlarmResult.success(suid, alarms, items != null ? items.size() : 0, parsed, invalid);
+            return GetActiveAlarmResult.success(suid, alarms, items != null ? items.size() : 0, parsed, invalid, resp.isRealCall());
         } catch (Exception e) {
             log.error("GET_ACTIVEALARM 异常: suid={}", suid, e);
             return GetActiveAlarmResult.fail("5001", "查询异常", suid);

@@ -1,0 +1,36 @@
+# 真实点位表模板 — SUConfigInstance (FSU监控点实例配置)
+# 字段来源: B接口 2024 附录 SUConfigInstance.xml (E.2)
+# 本文件只含表头和字段说明，真实值由 FSU 管理方 / SUConfigInstance.xml / 现场配置提供
+# 协议样例值不得当作现场真实点位值
+
+suid,fsuCode,fsuName,serviceUrl,protocolVersion,stdConfigVersion,deviceId,deviceName,deviceDescription,deviceHLType,typeId,deviceTypeName,spid,spName,spType,alarmMeanings,normalMeanings,unit,optionId,alarmEnabled,settable,setCommand,setSafetyLevel,confirmationRequired,localDeviceId,localPointId,enabled,remark
+
+# 字段说明:
+#   suid                  = <SU ID="">  FSU 标识（协议来源）
+#   fsuCode               = 平台 fsu_device.fsu_code（对应 suid）
+#   fsuName               = 平台 fsu_device.fsu_name
+#   serviceUrl            = FSU SOAP 端点地址 http://{ip}:{port}/services/FSUService（现场提供）
+#   protocolVersion       = 协议版本（如 B-2016 / B-2024）
+#   stdConfigVersion       = 参考的 StdSPConfigOptionDic Version
+#   deviceId              = <Device DeviceID=""> 设备编号（协议来源）
+#   deviceName            = <Device DeviceName=""> 设备名称（协议来源 / 现场确认）
+#   deviceDescription     = <Device Description=""> 设备描述（协议可选）
+#   deviceHLType          = <Device DeviceHLType=""> 设备高级类型（协议来源）
+#   typeId                = 对应 StdSPDic.DeviceType.TypeID（协议来源）
+#   deviceTypeName        = 对应 StdSPDic.DeviceType.DeviceTypeName（协议来源）
+#   spid                  = <Signal SPID=""> 标准监控点 ID（协议来源）
+#   spName                = <Signal SPName=""> 监控点名称（协议来源）
+#   spType                = <Signal SPType=""> 监控点类型（协议来源）
+#   alarmMeanings         = <Signal AlarmMeanings=""> 告警含义描述（协议来源）
+#   normalMeanings        = <Signal NormalMeanings=""> 正常含义描述（协议来源）
+#   unit                  = <Signal Unit=""> 单位（协议来源）
+#   optionId              = <Signal OptionID=""> 配置方案 ID（协议来源, 关联 StdSPConfigOptionDic）
+#   alarmEnabled          = 是否启用告警（平台落地, 默认 true）
+#   settable              = 是否允许控制（平台落地, 需现场确认）
+#   setCommand            = 允许的 SET 命令（SET_POINT / SET_THRESHOLD / 空）
+#   setSafetyLevel        = SET 安全级别（平台落地: forbidden / confirmation / allowed）
+#   confirmationRequired  = 是否需要二次确认（平台落地, 默认 true）
+#   localDeviceId         = 平台本地设备表 ID（平台生成, 导入后分配）
+#   localPointId          = 平台本地点位表 ID（平台生成, 导入后分配）
+#   enabled               = 是否启用（平台落地, 默认 true）
+#   remark                = 备注（保留）

@@ -12,6 +12,7 @@ import com.dcim.platform.module.binterface.service.fsu.FsuServiceRequest;
 import com.dcim.platform.module.binterface.service.fsu.FsuServiceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ public class SetTimeService {
     private final ConfirmationTokenService tokenService;
     private final SetCommandAuditService auditService;
 
+    @Autowired
     public SetTimeService(FsuServiceClient fsuServiceClient, FsuEndpointResolver fsuEndpointResolver) {
         this(fsuServiceClient, fsuEndpointResolver, null, null, null);
     }

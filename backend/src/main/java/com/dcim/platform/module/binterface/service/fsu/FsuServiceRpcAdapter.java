@@ -199,7 +199,7 @@ public class FsuServiceRpcAdapter {
                 // 可能是 CDATA 或转义文本
                 String text = returnEl.getTextContent();
                 if (text != null && !text.trim().isEmpty()) {
-                    innerXml = text.trim();
+                    innerXml = stripXmlDeclaration(text.trim());
                 } else {
                     // 空响应
                     innerXml = "<" + "Response" + "/>";
@@ -270,6 +270,26 @@ public class FsuServiceRpcAdapter {
     }
 
     // ==================== 内部工具方法 ====================
+
+    /**
+     * 从 XML 文本中去除嵌套的 {@code <?xml ...?>} 声明。
+     *
+     * <p>真实 FSU 的 RPC 响应中，{@code <invokeReturn>} 文本内容可能包含完整的
+     * XML 文档（含声明），需要剥离声明后才能嵌入其他 XML 文档中。</p>
+     *
+     * <p>保留原始报文不变，仅在解析副本上操作。</p>
+     */
+    public static String stripXmlDeclaration(String xmlText) {
+        if (xmlText == null || xmlText.isEmpty()) return xmlText;
+        String trimmed = xmlText.trim();
+        if (trimmed.startsWith("<?xml ")) {
+            int end = trimmed.indexOf("?>");
+            if (end >= 0) {
+                return trimmed.substring(end + 2).trim();
+            }
+        }
+        return xmlText;
+    }
 
     /**
      * 将内层 XML 包装在最小 SOAP Envelope 中，供 SoapMessageHandler.parse() 处理。

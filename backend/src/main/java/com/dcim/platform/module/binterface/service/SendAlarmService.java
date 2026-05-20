@@ -138,11 +138,20 @@ public class SendAlarmService {
         String alarmValue = null;
         String alarmDesc = null;
         String alarmType = null;
+        String serialNo = null;
+        String deviceId = null;
+        String spid = null;
 
         for (Map.Entry<String, String> entry : item.entrySet()) {
             String key = entry.getKey();
             if (key.equalsIgnoreCase("SignalID")) {
                 signalId = entry.getValue();
+            } else if (key.equalsIgnoreCase("SerialNo")) {
+                serialNo = entry.getValue();
+            } else if (key.equalsIgnoreCase("DeviceID")) {
+                deviceId = entry.getValue();
+            } else if (key.equalsIgnoreCase("SPID")) {
+                spid = entry.getValue();
             } else if (key.equalsIgnoreCase("AlarmCode")) {
                 alarmCode = entry.getValue();
             } else if (key.equalsIgnoreCase("AlarmName")) {
@@ -159,15 +168,17 @@ public class SendAlarmService {
         }
 
         if (signalId == null || signalId.trim().isEmpty()) {
-            return new AlarmParseResult(false, null, null, null, null, null, null, null, false, "缺少 SignalID");
+            return new AlarmParseResult(false, null, null, null, null, null, null, null,
+                    null, null, null, false, "缺少 SignalID");
         }
         if (alarmCode == null || alarmCode.trim().isEmpty()) {
-            return new AlarmParseResult(false, signalId, null, null, null, null, null, null, false,
+            return new AlarmParseResult(false, signalId, null, null, null, null, null, null,
+                    null, null, null, false,
                     "SignalID=" + signalId + " 缺少 AlarmCode");
         }
         if (alarmLevel == null || alarmLevel.trim().isEmpty()) {
-            // AlarmLevel 在 Entity 中为 NOT NULL，如果缺失则拒绝
-            return new AlarmParseResult(false, signalId, alarmCode, null, null, null, null, null, false,
+            return new AlarmParseResult(false, signalId, alarmCode, null, null, null, null, null,
+                    null, null, null, false,
                     "SignalID=" + signalId + " 缺少 AlarmLevel");
         }
 
@@ -178,6 +189,9 @@ public class SendAlarmService {
                 alarmValue != null ? alarmValue.trim() : null,
                 alarmDesc != null ? alarmDesc.trim() : null,
                 alarmType != null ? alarmType.trim() : ALARM_TYPE_GENERATE,
+                serialNo != null ? serialNo.trim() : null,
+                deviceId != null ? deviceId.trim() : null,
+                spid != null ? spid.trim() : null,
                 isRecover, null);
     }
 
@@ -195,6 +209,13 @@ public class SendAlarmService {
                 existing.setAlarmDesc(parsed.alarmDesc);
                 existing.setClearTime(now);
                 existing.setUpdatedAt(now);
+                // LANDING-001: 补写 SerialNo/DeviceID（兼容旧数据）
+                if (existing.getSerialNo() == null && parsed.serialNo != null) {
+                    existing.setSerialNo(parsed.serialNo);
+                }
+                if (existing.getDeviceId() == null && parsed.deviceId != null) {
+                    existing.setDeviceId(parsed.deviceId);
+                }
                 return alarmRecordRepository.save(existing);
             } else {
                 // 未找到原始告警，以恢复状态创建记录
@@ -218,6 +239,8 @@ public class SendAlarmService {
         AlarmRecordEntity entity = new AlarmRecordEntity();
         entity.setFsuId(fsuId);
         entity.setPointCode(parsed.signalId);
+        entity.setSerialNo(parsed.serialNo);
+        entity.setDeviceId(parsed.deviceId);
         entity.setAlarmCode(parsed.alarmCode);
         entity.setAlarmName(parsed.alarmName);
         entity.setAlarmLevel(parsed.alarmLevel);
@@ -252,12 +275,17 @@ public class SendAlarmService {
         final String alarmValue;
         final String alarmDesc;
         final String alarmType;
+        final String serialNo;
+        final String deviceId;
+        final String spid;
         final boolean isRecover;
         final String error;
 
         AlarmParseResult(boolean valid, String signalId, String alarmCode,
                          String alarmName, String alarmLevel, String alarmValue,
-                         String alarmDesc, String alarmType, boolean isRecover, String error) {
+                         String alarmDesc, String alarmType,
+                         String serialNo, String deviceId, String spid,
+                         boolean isRecover, String error) {
             this.valid = valid;
             this.signalId = signalId;
             this.alarmCode = alarmCode;
@@ -266,6 +294,9 @@ public class SendAlarmService {
             this.alarmValue = alarmValue;
             this.alarmDesc = alarmDesc;
             this.alarmType = alarmType;
+            this.serialNo = serialNo;
+            this.deviceId = deviceId;
+            this.spid = spid;
             this.isRecover = isRecover;
             this.error = error;
         }

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.dcim.platform.binterface.command.GetDataCommandHandlerTest
 -------------------------------------------------------------------------------
-Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.dcim.platform.binterface.command.GetDataCommandHandlerTest
+Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in com.dcim.platform.binterface.command.GetDataCommandHandlerTest

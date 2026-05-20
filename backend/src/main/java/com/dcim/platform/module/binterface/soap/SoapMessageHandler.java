@@ -84,7 +84,24 @@ public class SoapMessageHandler {
      * <p>用于：FsuServiceRpcAdapter 包装为 WSDL RPC 格式后发送给真实 FSU。</p>
      */
     public String buildRequest(String pkType, String info, String xmlData) {
-        return buildPayload(EL_REQUEST, pkType, info, xmlData);
+        return buildPayload(EL_REQUEST, pkType, null, info, xmlData);
+    }
+
+    /**
+     * 构造内层 {@code <Request>} payload（含 2024 Name+Code 格式 PK_Type）。
+     *
+     * <p>当 {@code commandCode != null} 时，PK_Type 输出 Name+Code 双标识：</p>
+     * <pre>{@code
+     * <PK_Type>
+     *   <Name>GET_ACTIVEALARM</Name>
+     *   <Code>603</Code>
+     * </PK_Type>
+     * }</pre>
+     *
+     * <p>当 {@code commandCode == null} 时，退化为旧格式纯文本。</p>
+     */
+    public String buildRequest(String pkType, Integer commandCode, String info, String xmlData) {
+        return buildPayload(EL_REQUEST, pkType, commandCode, info, xmlData);
     }
 
     /**
@@ -93,10 +110,10 @@ public class SoapMessageHandler {
      * <p>格式与 buildRequest 对称，根元素为 {@code <Response>}。</p>
      */
     public String buildPayloadResponse(String pkType, String info, String xmlData) {
-        return buildPayload(EL_RESPONSE, pkType, info, xmlData);
+        return buildPayload(EL_RESPONSE, pkType, null, info, xmlData);
     }
 
-    private String buildPayload(String rootTag, String pkType, String info, String xmlData) {
+    private String buildPayload(String rootTag, String pkType, Integer commandCode, String info, String xmlData) {
         try {
             DocumentBuilder builder = docFactory.newDocumentBuilder();
             Document doc = builder.newDocument();
@@ -104,9 +121,7 @@ public class SoapMessageHandler {
             Element root = doc.createElement(rootTag);
             doc.appendChild(root);
 
-            Element pkTypeEl = doc.createElement("PK_Type");
-            pkTypeEl.setTextContent(pkType);
-            root.appendChild(pkTypeEl);
+            appendPkTypeElement(doc, root, pkType, commandCode);
 
             if (info != null && !info.isEmpty()) {
                 Element infoEl = doc.createElement("Info");
@@ -124,6 +139,21 @@ public class SoapMessageHandler {
         } catch (Exception e) {
             throw new RuntimeException("Payload 构造失败: rootTag=" + rootTag, e);
         }
+    }
+
+    private void appendPkTypeElement(Document doc, Element root, String pkType, Integer commandCode) {
+        Element pkTypeEl = doc.createElement("PK_Type");
+        if (commandCode != null) {
+            Element nameEl = doc.createElement("Name");
+            nameEl.setTextContent(pkType);
+            pkTypeEl.appendChild(nameEl);
+            Element codeEl = doc.createElement("Code");
+            codeEl.setTextContent(String.valueOf(commandCode));
+            pkTypeEl.appendChild(codeEl);
+        } else {
+            pkTypeEl.setTextContent(pkType);
+        }
+        root.appendChild(pkTypeEl);
     }
 
     // ==================== document-style SOAP Envelope（SCService 入站） ====================
@@ -164,9 +194,7 @@ public class SoapMessageHandler {
             Element root = doc.createElement(rootTag);
             doc.appendChild(root);
 
-            Element pkTypeEl = doc.createElement("PK_Type");
-            pkTypeEl.setTextContent(pkType);
-            root.appendChild(pkTypeEl);
+            appendPkTypeElement(doc, root, pkType, null);
 
             if (info != null && !info.isEmpty()) {
                 Element infoEl = doc.createElement("Info");

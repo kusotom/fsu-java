@@ -13,4 +13,11 @@ public interface AlarmRecordRepository extends JpaRepository<AlarmRecordEntity, 
     List<AlarmRecordEntity> findByAlarmLevelAndAlarmStatus(String alarmLevel, String alarmStatus);
     Optional<AlarmRecordEntity> findByFsuIdAndPointCodeAndAlarmCodeAndAlarmStatus(
             Long fsuId, String pointCode, String alarmCode, String alarmStatus);
+
+    Optional<AlarmRecordEntity> findByFsuIdAndSerialNo(Long fsuId, String serialNo);
+
+    Optional<AlarmRecordEntity> findByFsuIdAndDeviceIdAndPointCodeAndAlarmStatus(
+            Long fsuId, String deviceId, String pointCode, String alarmStatus);
+
+    List<AlarmRecordEntity> findByFsuIdAndAlarmStatus(Long fsuId, String alarmStatus);
 }

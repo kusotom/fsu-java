@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface BInterfaceMessageLogRepository extends JpaRepository<BInterfaceMessageLogEntity, Long> {
-    List<BInterfaceMessageLogEntity> findByFsuIdOrderByCreatedAtDesc(Long fsuId);
-    List<BInterfaceMessageLogEntity> findByCommandCodeOrderByCreatedAtDesc(String commandCode);
+    List<BInterfaceMessageLogEntity> findByFsuCodeOrderByCreatedAtDesc(String fsuCode);
+    List<BInterfaceMessageLogEntity> findByCommandOrderByCreatedAtDesc(String command);
 }

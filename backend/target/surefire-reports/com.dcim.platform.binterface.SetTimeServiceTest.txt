@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.dcim.platform.binterface.SetTimeServiceTest
 -------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in com.dcim.platform.binterface.SetTimeServiceTest
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.132 s -- in com.dcim.platform.binterface.SetTimeServiceTest

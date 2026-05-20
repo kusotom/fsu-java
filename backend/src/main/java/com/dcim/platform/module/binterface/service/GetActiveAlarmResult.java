@@ -20,12 +20,13 @@ public class GetActiveAlarmResult {
     private final int totalCount;
     private final int parsedCount;
     private final int invalidCount;
+    private final boolean realDeviceAccessed;
     private final List<String> errors;
 
     private GetActiveAlarmResult(boolean success, String resultCode, String resultDesc,
                                   String suid, List<ActiveAlarmItem> activeAlarms,
                                   int totalCount, int parsedCount, int invalidCount,
-                                  List<String> errors) {
+                                  boolean realDeviceAccessed, List<String> errors) {
         this.success = success;
         this.resultCode = resultCode;
         this.resultDesc = resultDesc;
@@ -34,20 +35,26 @@ public class GetActiveAlarmResult {
         this.totalCount = totalCount;
         this.parsedCount = parsedCount;
         this.invalidCount = invalidCount;
+        this.realDeviceAccessed = realDeviceAccessed;
         this.errors = errors != null ? List.copyOf(errors) : List.of();
     }
 
     public static GetActiveAlarmResult success(String suid, List<ActiveAlarmItem> alarms,
                                                 int total, int parsed, int invalid) {
-        return new GetActiveAlarmResult(true, "0", "OK", suid, alarms, total, parsed, invalid, List.of());
+        return new GetActiveAlarmResult(true, "0", "OK", suid, alarms, total, parsed, invalid, false, List.of());
+    }
+
+    public static GetActiveAlarmResult success(String suid, List<ActiveAlarmItem> alarms,
+                                                int total, int parsed, int invalid, boolean realDeviceAccessed) {
+        return new GetActiveAlarmResult(true, "0", "OK", suid, alarms, total, parsed, invalid, realDeviceAccessed, List.of());
     }
 
     public static GetActiveAlarmResult fail(String resultCode, String desc) {
-        return new GetActiveAlarmResult(false, resultCode, desc, null, List.of(), 0, 0, 0, List.of(desc));
+        return new GetActiveAlarmResult(false, resultCode, desc, null, List.of(), 0, 0, 0, false, List.of(desc));
     }
 
     public static GetActiveAlarmResult fail(String resultCode, String desc, String suid) {
-        return new GetActiveAlarmResult(false, resultCode, desc, suid, List.of(), 0, 0, 0, List.of(desc));
+        return new GetActiveAlarmResult(false, resultCode, desc, suid, List.of(), 0, 0, 0, false, List.of(desc));
     }
 
     public boolean isSuccess() { return success; }
@@ -58,6 +65,7 @@ public class GetActiveAlarmResult {
     public int getTotalCount() { return totalCount; }
     public int getParsedCount() { return parsedCount; }
     public int getInvalidCount() { return invalidCount; }
+    public boolean isRealDeviceAccessed() { return realDeviceAccessed; }
     public List<String> getErrors() { return errors; }
     public boolean hasErrors() { return !errors.isEmpty(); }
 

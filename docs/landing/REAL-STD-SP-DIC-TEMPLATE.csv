@@ -1,0 +1,20 @@
+# 标准监控点字典模板 — StdSPDic
+# 字段来源: B接口 2024 附录 StdSPDic.xml (E.3)
+# 本文件只含表头和字段说明，真实值由 FSU 管理方 / StdSPDic.xml 提供
+# 协议样例值不得当作现场真实点位值
+
+stdSpDicName,stdSpDicVersion,typeId,deviceHLType,deviceTypeName,spid,spName,spType,alarmMeanings,normalMeanings,unit,remark
+
+# 字段说明:
+#   stdSpDicName          = <StdSPDic Name=""> 字典名称（协议来源）
+#   stdSpDicVersion       = <StdSPDic Version=""> 字典版本（协议来源）
+#   typeId                = <DeviceType TypeID=""> 设备类型 ID（协议来源）
+#   deviceHLType          = <DeviceType DeviceHLType=""> 设备高级类型（协议来源）
+#   deviceTypeName        = <DeviceType DeviceTypeName=""> 设备类型名称（协议来源）
+#   spid                  = <Signal SPID=""> 标准监控点 ID（协议来源）
+#   spName                = <Signal SPName=""> 监控点名称（协议来源）
+#   spType                = <Signal SPType=""> 监控点类型（协议来源）
+#   alarmMeanings         = <Signal AlarmMeanings=""> 告警含义描述（协议来源）
+#   normalMeanings        = <Signal NormalMeanings=""> 正常含义描述（协议来源）
+#   unit                  = <Signal Unit=""> 单位（协议来源）
+#   remark                = 备注（保留）

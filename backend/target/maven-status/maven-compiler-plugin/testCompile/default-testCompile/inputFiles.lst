@@ -14,6 +14,7 @@
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/BInterfaceInvalidMessageTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/command/GetLoginInfoCommandHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SlowDataPollingIntegrationTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/Landing003RealFsuIntegration.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ConfirmationTokenServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/WsdlEndpointTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/CommandResultTest.java
@@ -21,6 +22,7 @@
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/command/GetDataCommandHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SendDataServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SetTimeConfirmationAuditIntegrationTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ActiveAlarmAuditControllerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/XmlDataModelTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/CommandDispatcherErrorTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/CommandContextTest.java
@@ -33,6 +35,7 @@
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/LoginCommandHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SoapMessageHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/LocalActiveAlarmSnapshotServiceTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ActiveAlarmAuditStatusApiTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/service/GetDataServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/BInterfaceCommandAliasMapperTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/GetLoginInfoFtpSlowChannelIntegrationTest.java
@@ -59,12 +62,17 @@
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/BInterfaceFieldAliasMapperTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ScServiceRpcCompatibilityTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/BInterfaceMainFlowIntegrationTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ActiveAlarmAuditSchedulerTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/Landing007GetDataDeviceList.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SetCommandAuditIntegrationTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/Landing001ModelReadinessTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/command/GetThresholdCommandHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/GetActiveAlarmServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/service/SetThresholdAuditServiceTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/ActiveAlarmAuditRecordServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/service/SetThresholdServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/PkTypeDescriptorTest.java
+/home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/command/GetActiveAlarmCommandHandlerTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/service/SetThresholdSafetyGateTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/SendAlarmServiceTest.java
 /home/tom/桌面/FSU/fsu-platform-java/backend/src/test/java/com/dcim/platform/binterface/XmlDataParserFieldAliasTest.java

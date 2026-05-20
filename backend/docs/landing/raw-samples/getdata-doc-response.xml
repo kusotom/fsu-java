@@ -1,0 +1,12 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <PK_Type>
+        <Name>SEND_ALARM</Name>
+        <Code>501</Code>
+    </PK_Type>
+    <Info>
+        <Values>
+            <TAlarmList/>
+        </Values>
+    </Info>
+</Response></soap:Body></soap:Envelope>

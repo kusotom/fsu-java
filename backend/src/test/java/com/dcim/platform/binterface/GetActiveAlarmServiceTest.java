@@ -132,4 +132,66 @@ class GetActiveAlarmServiceTest {
         FsuServiceClient client = req -> FsuServiceResponse.fail("3", "错误");
         assertFalse(new GetActiveAlarmService(client, null).execute("FSU-001", null).isSuccess());
     }
+
+    // ==================== TAlarm 包裹形态 (BIF-P4-FIX-001) ====================
+
+    private static final String TALARM_RESPONSE =
+            "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+            + "<soap:Body><Response>"
+            + "<PK_Type><Name>GET_ACTIVEALARM_ACK</Name><Code>604</Code></PK_Type>"
+            + "<Info><ResultCode>0</ResultCode></Info>"
+            + "<xmlData>"
+            + "<TAlarm>"
+            + "<SerialNo>SN-T-001</SerialNo>"
+            + "<DeviceID>DEV-T-001</DeviceID>"
+            + "<SPID>SP-T-001</SPID>"
+            + "<StartTime>2026-05-19 10:00:00</StartTime>"
+            + "<TriggerVal>52.3</TriggerVal>"
+            + "<AlarmLevel>一级</AlarmLevel>"
+            + "<AlarmFlag>开始</AlarmFlag>"
+            + "<AlarmDesc>温度过高告警</AlarmDesc>"
+            + "</TAlarm>"
+            + "</xmlData>"
+            + "</Response></soap:Body></soap:Envelope>";
+
+    @Test
+    void shouldParseAlarmWrappedInTAlarm() {
+        FsuServiceClient client = req -> {
+            BInterfaceMessage msg = soapHandler.parse(TALARM_RESPONSE);
+            XmlDataModel xd = (msg.getXmlData() != null) ? xmlDataParser.parse(msg.getXmlData()) : new XmlDataModel();
+            return FsuServiceResponse.success(TALARM_RESPONSE, msg.getInfo(), msg.getXmlData(), xd);
+        };
+        GetActiveAlarmService svc = new GetActiveAlarmService(client, null);
+        GetActiveAlarmResult r = svc.execute("FSU-T01", null);
+        assertTrue(r.isSuccess());
+        assertEquals(1, r.getParsedCount());
+        assertEquals("SN-T-001", r.getActiveAlarms().get(0).getSerialNo());
+        assertEquals("温度过高告警", r.getActiveAlarms().get(0).getAlarmDesc());
+    }
+
+    @Test
+    void xmlDataWithUnexpectedFormatShouldNotCrash() {
+        String unexpected = "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+                + "<soap:Body><Response>"
+                + "<PK_Type><Name>GET_ACTIVEALARM_ACK</Name><Code>604</Code></PK_Type>"
+                + "<Info><ResultCode>0</ResultCode></Info>"
+                + "<xmlData><UnexpectedTag><Data>garbage</Data></UnexpectedTag></xmlData>"
+                + "</Response></soap:Body></soap:Envelope>";
+        FsuServiceClient client = req -> {
+            BInterfaceMessage msg = soapHandler.parse(unexpected);
+            XmlDataModel xd = (msg.getXmlData() != null) ? xmlDataParser.parse(msg.getXmlData()) : new XmlDataModel();
+            return FsuServiceResponse.success(unexpected, msg.getInfo(), msg.getXmlData(), xd);
+        };
+        GetActiveAlarmService svc = new GetActiveAlarmService(client, null);
+        GetActiveAlarmResult r = svc.execute("FSU-001", null);
+        assertNotNull(r);  // 不应崩溃
+        assertTrue(r.isSuccess());  // FSU 返回 ResultCode=0，解析失败不应影响 success
+    }
+
+    @Test
+    void realDeviceAccessedShouldBeFalseFromStub() {
+        GetActiveAlarmService svc = createService(STUB_RESPONSE);
+        GetActiveAlarmResult r = svc.execute("FSU-001", null);
+        assertFalse(r.isRealDeviceAccessed(), "Stub 响应应标记 realDeviceAccessed=false");
+    }
 }

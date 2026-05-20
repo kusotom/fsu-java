@@ -22,6 +22,12 @@ public class AlarmRecordEntity {
     @Column(name = "point_code", length = 64)
     private String pointCode;
 
+    @Column(name = "serial_no", length = 128)
+    private String serialNo;
+
+    @Column(name = "device_id", length = 128)
+    private String deviceId;
+
     @Column(name = "alarm_code", length = 32)
     private String alarmCode;
 

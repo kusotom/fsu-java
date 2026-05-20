@@ -1,0 +1,6 @@
+<Request>
+  <PK_Type>GET_SUINFO</PK_Type>
+  <Info>
+    <SUID>FSU-001</SUID>
+  </Info>
+</Request>

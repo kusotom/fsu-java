@@ -48,6 +48,9 @@ public class FsuDeviceEntity {
     @Column(name = "protocol_version", length = 16)
     private String protocolVersion;
 
+    @Column(name = "service_url", length = 512)
+    private String serviceUrl;
+
     @Column(length = 16, nullable = false)
     private String status;
 

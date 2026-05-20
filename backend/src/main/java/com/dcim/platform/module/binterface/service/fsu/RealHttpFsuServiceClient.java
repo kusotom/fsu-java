@@ -1,5 +1,8 @@
 package com.dcim.platform.module.binterface.service.fsu;
 
+import com.dcim.platform.module.binterface.compat.BInterfaceCommand2016;
+import com.dcim.platform.module.binterface.compat.BInterfaceCommandAliasMapper;
+import com.dcim.platform.module.binterface.model.BInterfaceCommand2024;
 import com.dcim.platform.module.binterface.model.BInterfaceMessage;
 import com.dcim.platform.module.binterface.soap.SoapMessageHandler;
 import com.dcim.platform.module.binterface.xml.XmlDataModel;
@@ -91,10 +94,30 @@ public class RealHttpFsuServiceClient implements FsuServiceClient {
 
         try {
             // 1. 构造内层 <Request> payload
-            String requestPayload = soapMessageHandler.buildRequest(
-                    request.getPkType().name(),
-                    request.getInfoXml(),
-                    request.getXmlDataXml());
+            //    structured (default): 2024 Name+Code 格式
+            //    legacy-text: 旧版纯文本 PK_Type（无 Code）
+            //    legacy-2016: Name+Code 格式但使用 B接口2016 码表
+            String pkTypeName = request.getPkType().name();
+            boolean forceLegacyText = "legacy-text".equals(request.getPkTypeFormat());
+            boolean forceLegacy2016 = "legacy-2016".equals(request.getPkTypeFormat());
+            String requestPayload;
+            if (forceLegacyText) {
+                requestPayload = soapMessageHandler.buildRequest(pkTypeName,
+                        request.getInfoXml(), request.getXmlDataXml());
+            } else if (forceLegacy2016) {
+                Integer code2016 = BInterfaceCommand2016.codeFor(pkTypeName).orElse(null);
+                requestPayload = soapMessageHandler.buildRequest(pkTypeName, code2016,
+                        request.getInfoXml(), request.getXmlDataXml());
+            } else {
+                BInterfaceCommand2024 cmd2024 = BInterfaceCommandAliasMapper.to2024(request.getPkType()).orElse(null);
+                if (cmd2024 != null) {
+                    requestPayload = soapMessageHandler.buildRequest(cmd2024.getName(), cmd2024.getCode(),
+                            request.getInfoXml(), request.getXmlDataXml());
+                } else {
+                    requestPayload = soapMessageHandler.buildRequest(pkTypeName,
+                            request.getInfoXml(), request.getXmlDataXml());
+                }
+            }
 
             // 2. RPC 封装
             String rpcSoapRequest = rpcAdapter.wrapRequestPayload(requestPayload);

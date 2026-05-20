@@ -77,7 +77,7 @@ public class ActiveAlarmConsistencyAuditService {
             List<ActiveAlarmDiffService.LocalAlarmSnapshot> localSnapshots =
                     snapshotService.findLocalActiveSnapshots(suid);
             ActiveAlarmDiffResult diff = diffService.diff(suid, fsuResult.getActiveAlarms(), localSnapshots);
-            return ActiveAlarmConsistencyAuditResult.fromDiff(diff, true, false, "0");
+            return ActiveAlarmConsistencyAuditResult.fromDiff(diff, true, fsuResult.isRealDeviceAccessed(), "0");
         } catch (Exception e) {
             log.error("差异核对失败: suid={}", suid, e);
             return ActiveAlarmConsistencyAuditResult.fsuQueryFailed(suid, "5001",

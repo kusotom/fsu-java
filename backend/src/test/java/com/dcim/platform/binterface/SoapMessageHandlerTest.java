@@ -303,4 +303,30 @@ class SoapMessageHandlerTest {
         assertFalse(content.isEmpty());
         assertTrue(content.contains("PK_Type"), "xmlData fixture 应包含 PK_Type: " + path);
     }
+
+    // ==================== 2024 Name+Code 出站构造 (BIF-P4-FIX-001) ====================
+
+    @Test
+    void buildRequest2024ShouldContainNameAndCode() {
+        String xml = handler.buildRequest("GET_ACTIVEALARM", 603,
+                "<SUID>FSU-001</SUID>", "<TAlarm><AlarmFlag>开始</AlarmFlag></TAlarm>");
+        assertTrue(xml.contains("<Name>GET_ACTIVEALARM</Name>"), "应包含 Name 元素: " + xml);
+        assertTrue(xml.contains("<Code>603</Code>"), "应包含 Code 元素: " + xml);
+        assertFalse(xml.contains("GET_ACTIVEALARM</PK_Type>"), "不应使用旧格式纯文本: " + xml);
+    }
+
+    @Test
+    void buildRequestWithoutCodeShouldUseLegacyFormat() {
+        String xml = handler.buildRequest("GET_DATA", null, null, null);
+        assertTrue(xml.contains("<PK_Type>GET_DATA</PK_Type>"), "无 Code 时应使用旧格式: " + xml);
+        assertFalse(xml.contains("<Name>"), "无 Code 时不应有 Name 子元素");
+    }
+
+    @Test
+    void buildRequest2024ShouldContainSuidInInfo() {
+        String xml = handler.buildRequest("GET_ACTIVEALARM", 603,
+                "<SUID>FSU-002</SUID>", null);
+        assertTrue(xml.contains("FSU-002"), "Info 应包含 SUID: " + xml);
+        assertTrue(xml.contains("<Info>"), "应包含 Info 元素");
+    }
 }

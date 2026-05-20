@@ -1,0 +1,24 @@
+# 标准监控点配置方案模板 — StdSPConfigOptionDic
+# 字段来源: B接口 2024 附录 StdSPConfigOptionDic.xml (E.4)
+# 本文件只含表头和字段说明，真实值由 FSU 管理方 / StdSPConfigOptionDic.xml 提供
+# 协议样例值不得当作现场真实点位值
+
+stdConfigName,stdConfigVersion,typeId,spid,optionId,optionName,alarmLevel,alarmThreshold,startDelay,endDelay,period,absoluteVal,relativeVal,hysteresis,thresholdEnabled,remark
+
+# 字段说明（按协议原名）:
+#   stdConfigName         = <StdSPConfigOptionDic Name=""> 配置方案表名称（协议来源）
+#   stdConfigVersion      = <StdSPConfigOptionDic Version=""> 配置方案表版本（协议来源）
+#   typeId                = 对应的设备类型 ID（关联 StdSPDic.DeviceType.TypeID）
+#   spid                  = 标准监控点 ID（关联 StdSPDic.Signal.SPID）
+#   optionId              = <Option OptionID=""> 配置方案编号（协议来源）
+#   optionName            = 配置方案名称（协议可选 / 管理方提供）
+#   alarmLevel            = <Option AlarmLevel=""> 告警级别（协议来源）
+#   alarmThreshold        = <Option AlarmThreshold=""> 告警门限值（协议来源）
+#   startDelay            = <Option StartDelay=""> 告警产生延时 秒（协议来源）
+#   endDelay              = <Option EndDelay=""> 告警结束延时 秒（协议来源）
+#   period                = <Option Period=""> 存储周期 秒（协议来源）
+#   absoluteVal           = <Option AbsoluteVal=""> 变化绝对阈值（协议来源）
+#   relativeVal           = <Option RelativeVal=""> 变化百分比阈值（协议来源）
+#   hysteresis            = <Option Hysteresis=""> 回差（协议来源）
+#   thresholdEnabled      = 是否启用门限（平台落地，由 alarmThreshold 是否为空推断或管理方确认）
+#   remark                = 备注（保留）

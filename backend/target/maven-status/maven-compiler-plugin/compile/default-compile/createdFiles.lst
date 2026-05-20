@@ -1,4 +1,5 @@
 com/dcim/platform/module/binterface/service/GetThresholdResult.class
+com/dcim/platform/module/binterface/controller/ActiveAlarmAuditController.class
 com/dcim/platform/module/binterface/command/SendAlarmCommandHandler.class
 com/dcim/platform/module/binterface/compat/BInterfaceCommandAliasMapper.class
 com/dcim/platform/module/binterface/service/fsu/FsuServiceRequest$FsuServiceRequestBuilder.class
@@ -54,6 +55,7 @@ com/dcim/platform/module/binterface/controller/BInterfaceMessageLogController.cl
 com/dcim/platform/module/binterface/service/SetThresholdAuditService.class
 com/dcim/platform/module/binterface/service/fsu/FsuServiceClient.class
 com/dcim/platform/module/binterface/command/GetLoginInfoCommandHandler.class
+com/dcim/platform/module/binterface/dto/ActiveAlarmAuditStatusResponse$Builder.class
 com/dcim/platform/module/binterface/command/CommandHandler.class
 com/dcim/platform/module/binterface/service/BInterfaceCommandService.class
 com/dcim/platform/module/binterface/service/GetSuInfoResult.class
@@ -66,6 +68,7 @@ com/dcim/platform/module/binterface/log/BInterfaceMessageLogEntity.class
 com/dcim/platform/module/binterface/safety/ConfirmationToken.class
 com/dcim/platform/module/binterface/service/slow/SignalPollingTargetService.class
 com/dcim/platform/module/binterface/service/GetDataService.class
+com/dcim/platform/module/binterface/service/ActiveAlarmAuditRecordService.class
 com/dcim/platform/module/system/entity/RoleEntity.class
 com/dcim/platform/module/binterface/model/PkTypeDescriptor.class
 com/dcim/platform/module/binterface/command/GetSpConfigOptionCommandHandler.class
@@ -81,7 +84,7 @@ com/dcim/platform/module/binterface/model/BInterfacePkType.class
 com/dcim/platform/module/binterface/repository/BInterfaceMessageLogRepository.class
 com/dcim/platform/module/telemetry/repository/DeviceHeartbeatRepository.class
 com/dcim/platform/module/binterface/service/OfflineDetectionResult.class
-com/dcim/platform/module/binterface/log/BInterfaceMessageLogRepository.class
+com/dcim/platform/module/binterface/compat/BInterfaceCommand2016.class
 com/dcim/platform/module/telemetry/entity/RealtimeDataEntity.class
 com/dcim/platform/module/binterface/soap/SoapMessageHandler.class
 com/dcim/platform/module/telemetry/service/HistoryDataService.class
@@ -102,11 +105,13 @@ com/dcim/platform/module/binterface/model/BInterfaceCommand2024$Category.class
 com/dcim/platform/module/binterface/service/SendDataService.class
 com/dcim/platform/module/binterface/command/CommandResult.class
 com/dcim/platform/module/binterface/service/TimeCheckResult.class
+com/dcim/platform/module/binterface/dto/ActiveAlarmAuditRecordResponse.class
 com/dcim/platform/module/resource/entity/SiteEntity.class
 com/dcim/platform/module/binterface/service/BInterfaceSessionQueryService.class
 com/dcim/platform/module/binterface/repository/BInterfaceSessionRepository.class
 com/dcim/platform/module/binterface/safety/SetCommandSafetyProperties$CommandSafetyConfig.class
 com/dcim/platform/module/binterface/controller/BInterfaceCommandController.class
+com/dcim/platform/module/binterface/service/ActiveAlarmAuditScheduler.class
 com/dcim/platform/module/binterface/service/SendAlarmResult.class
 com/dcim/platform/module/binterface/command/LoginCommandHandler.class
 com/dcim/platform/module/binterface/controller/FtpTransferRecordController.class
@@ -123,6 +128,7 @@ com/dcim/platform/module/resource/repository/CabinetRepository.class
 com/dcim/platform/module/system/controller/RoleController.class
 com/dcim/platform/module/system/service/RoleService.class
 com/dcim/platform/module/binterface/service/LoginResult.class
+com/dcim/platform/module/binterface/entity/ActiveAlarmAuditRecordEntity.class
 com/dcim/platform/module/binterface/service/SureadyResult.class
 com/dcim/platform/module/binterface/safety/SetCommandSafetyGate.class
 com/dcim/platform/module/binterface/service/LoginService.class
@@ -134,6 +140,7 @@ com/dcim/platform/module/binterface/util/WsdlLoader.class
 com/dcim/platform/module/binterface/service/fsu/RealHttpFsuServiceClient.class
 com/dcim/platform/module/telemetry/repository/HistoryDataRepository.class
 com/dcim/platform/module/binterface/entity/BInterfaceCallRecordEntity.class
+com/dcim/platform/module/binterface/service/ActiveAlarmAuditStatusService.class
 com/dcim/platform/module/binterface/service/sc/ScServiceController.class
 com/dcim/platform/module/resource/service/MonitoringPointService.class
 com/dcim/platform/module/binterface/service/SendAlarmService.class
@@ -152,6 +159,7 @@ com/dcim/platform/module/resource/controller/SiteController.class
 com/dcim/platform/module/binterface/service/GetSuInfoService.class
 com/dcim/platform/module/binterface/command/GetFtpCommandHandler.class
 com/dcim/platform/module/resource/service/FsuDeviceService.class
+com/dcim/platform/module/binterface/service/ActiveAlarmAuditSchedulerProperties.class
 com/dcim/platform/module/resource/repository/FsuDeviceRepository.class
 com/dcim/platform/module/binterface/service/slow/SlowDataPollingResult.class
 com/dcim/platform/module/binterface/repository/FtpTransferRecordRepository.class
@@ -186,6 +194,7 @@ com/dcim/platform/module/resource/entity/FsuDeviceEntity.class
 com/dcim/platform/module/binterface/ftp/FtpConfigModel.class
 com/dcim/platform/module/binterface/service/GetFtpService.class
 com/dcim/platform/module/system/controller/UserAccountController.class
+com/dcim/platform/module/binterface/repository/ActiveAlarmAuditRecordRepository.class
 com/dcim/platform/module/binterface/safety/SetCommandSafetyDecision.class
 com/dcim/platform/module/binterface/wsdl/ScServiceWsdlController.class
 com/dcim/platform/module/resource/controller/MonitoringPointController.class
@@ -196,5 +205,6 @@ com/dcim/platform/module/binterface/service/OfflineDetectionService.class
 com/dcim/platform/module/binterface/entity/BInterfaceFsuStatusEntity.class
 com/dcim/platform/module/binterface/service/GetActiveAlarmResult.class
 com/dcim/platform/module/binterface/safety/SetCommandRiskLevel.class
+com/dcim/platform/module/binterface/dto/ActiveAlarmAuditStatusResponse.class
 com/dcim/platform/module/telemetry/service/RealtimeDataService.class
 com/dcim/platform/module/binterface/service/ActiveAlarmDiffService.class

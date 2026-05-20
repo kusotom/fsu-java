@@ -6,7 +6,22 @@
 >
 > 索引按日期倒序排列。
 
+- [2026-05-20 OPENSPEC-CLI-001 CLI安装与校验](2026-05-20-OPENSPEC-CLI-001-openspec-cli-installed.md) — OpenSpec CLI v1.3.1 已安装, `openspec list`/`list --specs` 校验通过, 未执行 init
+- [2026-05-20 OPENSPEC-001 OpenSpec规格驱动层接入](2026-05-20-OPENSPEC-001-claude-openspec-rules.md) — 引入OpenSpec规范驱动层, 10强制场景+12字段Change模板, 纯文档接入无代码修改
+- [2026-05-20 LANDING-008 被动上报联调准备](2026-05-20-LANDING-008-passive-reporting-readiness.md) — SCService链路核对, 集成方案+FSU配置指南+检查清单, 0代码修改
+- [2026-05-20 LANDING-007 GET_DATA真实DeviceID查询](2026-05-20-LANDING-007-binterface-2016-get-data-real-deviceid.md) — GET_DATA(401)+DeviceList协议核对, 4策略空响应, FSU当前无测量数据
+- [2026-05-20 LANDING-006 B接口2016码表兼容重试](2026-05-20-LANDING-006-binterface-2016-code-retry.md) — **突破**: 2016 Code首次获取FSU真实数据, CPU 14.95%/MEM 62.84%, 4 DeviceIDs
+- [2026-05-20 LANDING-005 真实FSUID只读重试](2026-05-20-LANDING-005-real-fsu-fsuid-readonly-retry.md) — FSUID=51051243812345 retry, 确认FSUID非根因, L-004/L-005逐字节相同
+- [2026-05-20 LANDING-004 兼容性修复与PK_Type重试](2026-05-20-LANDING-004-real-fsu-compatibility-retry.md) — stripXmlDeclaration容错+pkTypeFormat双格式, 1164 tests, 10次真实重试, structured/legacy对比
+- [2026-05-20 LANDING-003 真实FSU只读联调采集](2026-05-20-LANDING-003-real-fsu-readonly-call.md) — 192.168.100.100:8080 6命令只读联调, 24个原始报文, FSU空响应协议分析
+- [2026-05-19 READ-001 项目读取记录](2026-05-19-READ-001-project-read.md) — 读取桌面 FSU 项目，确认路径、规则、技术栈、模块结构和当前工作区状态
+- [2026-05-19 CODEX-AUDIT BIF-P4-020 GET_ACTIVEALARM+ActiveAlarmDiff编排审计](2026-05-19-CODEX-AUDIT-BIF-P4-020-active-alarm-orchestration.md) — Codex 只读审计，ActiveAlarm/BInterface 目标测试通过，全量 1073 tests 1 Error，发现默认全量测试真实 FSU 访问风险
 - [2026-05-15 BIF-P4 全量进度同步](2026-05-15-BIF-P4-current-progress-sync.md) — 1070 tests, 真实设备联调/2024协议/SET安全/告警审计完整状态
+- [2026-05-19 BIF-P4-022 审计状态查询API](2026-05-19-BIF-P4-022-active-alarm-audit-status-api.md) — 9新测试, 1108全量通过, 只读API
+- [2026-05-19 BIF-P4-021 Scheduler定时审计](2026-05-19-BIF-P4-021-active-alarm-audit-scheduler.md) — 12新测试+持久化, 1099全量通过, 默认关闭
+- [2026-05-19 CLAUDE_PROJECT_RULES 创建](2026-05-19-CLAUDE-PROJECT-RULES-created.md) — 20条固定规则, Claude每次启动必须加载
+- [2026-05-19 BIF-P4-FIX-001 验收阻断修复](2026-05-19-BIF-P4-FIX-001-bif-p4-020-acceptance-blockers.md) — Codex 5项阻断全部修复, 1087 tests 0/0/5, contextLoads首次通过
+- [2026-05-19 BIF-P4-020 编排审计补完](2026-05-19-BIF-P4-020-active-alarm-audit-orchestration.md) — 审计文档 + 失败路径测试(3), 46 ActiveAlarm 测试
 - [2026-05-15 BIF-P4-020 GET_ACTIVEALARM+diff编排审计](2026-05-15-BIF-P4-020-active-alarm-consistency-audit-orchestration.md) — ConsistencyAuditService双模式, 10新测试
 - [2026-05-15 BIF-P4-019 alarm_record只读适配](2026-05-15-BIF-P4-019-active-alarm-local-repository-adapter.md) — Entity→Snapshot映射, DiffAudit编排, 8新测试
 - [2026-05-15 BIF-P4-018 活动告警差异核对审计](2026-05-15-BIF-P4-018-active-alarm-diff-audit.md) — FSU快照vs本地alarm_record只读对比, 14新测试

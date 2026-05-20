@@ -443,3 +443,14 @@ BEGIN
         );
     END LOOP;
 END $$;
+
+-- ============================================================
+-- LANDING-001: 真实点位表接入前数据模型补强
+-- ============================================================
+
+-- alarm_record 新增 SerialNo / DeviceID 字段
+ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS serial_no VARCHAR(128);
+ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS device_id VARCHAR(128);
+
+-- fsu_device 新增 service_url 字段
+ALTER TABLE fsu_device ADD COLUMN IF NOT EXISTS service_url VARCHAR(512);

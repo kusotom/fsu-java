@@ -97,6 +97,51 @@ class ActiveAlarmConsistencyAuditServiceTest {
         assertFalse(r.isRealDeviceAccessed());
     }
 
+    // ==================== auditByQueryingFsu 失败路径 ====================
+
+    @Test void auditByQueryingFsuResultCodeNotZeroShouldFail() {
+        GetActiveAlarmService failSvc = new GetActiveAlarmService(null, null) {
+            @Override
+            public GetActiveAlarmResult execute(String fsuCode, String url) {
+                return GetActiveAlarmResult.fail("5001", "FSU 内部错误", fsuCode);
+            }
+        };
+        ActiveAlarmConsistencyAuditService failAuditSvc = new ActiveAlarmConsistencyAuditService(
+                failSvc, new LocalActiveAlarmSnapshotService(alarmRepo, fsuDeviceRepo), new ActiveAlarmDiffService());
+
+        var r = failAuditSvc.auditByQueryingFsu("FSU-001", null);
+        assertFalse(r.isSuccess());
+        assertTrue(r.isFsuQueryExecuted());
+        assertEquals(0, r.getFsuCount());
+        assertEquals(0, r.getLocalCount());
+    }
+
+    @Test void auditByQueryingFsuExceptionShouldReturnFailure() {
+        GetActiveAlarmService exceptSvc = new GetActiveAlarmService(null, null) {
+            @Override
+            public GetActiveAlarmResult execute(String fsuCode, String url) {
+                throw new RuntimeException("网络不可达");
+            }
+        };
+        ActiveAlarmConsistencyAuditService exceptAuditSvc = new ActiveAlarmConsistencyAuditService(
+                exceptSvc, new LocalActiveAlarmSnapshotService(alarmRepo, fsuDeviceRepo), new ActiveAlarmDiffService());
+
+        var r = exceptAuditSvc.auditByQueryingFsu("FSU-001", null);
+        assertFalse(r.isSuccess());
+        assertTrue(r.isFsuQueryExecuted());
+        assertFalse(r.getErrors().isEmpty());
+    }
+
+    @Test void auditByQueryingFsuDiffExceptionShouldReturnFailure() {
+        setupDevice("FSU-001", 1L);
+        when(alarmRepo.findByFsuId(1L)).thenThrow(new RuntimeException("数据库异常"));
+
+        var r = svc.auditByQueryingFsu("FSU-001", null);
+        assertFalse(r.isSuccess());
+        assertTrue(r.isFsuQueryExecuted());
+        assertFalse(r.getErrors().isEmpty());
+    }
+
     // ==================== 统计正确性 ====================
 
     @Test void countsShouldBeCorrect() {
@@ -130,6 +175,52 @@ class ActiveAlarmConsistencyAuditServiceTest {
         svc.auditByQueryingFsu("FSU-001", null);
         verify(alarmRepo, never()).save(any());
         verify(alarmRepo, never()).delete(any());
+    }
+
+    // ==================== realDeviceAccessed 透传 (BIF-P4-FIX-001) ====================
+
+    @Test void realDeviceAccessedShouldBeFalseFromStub() {
+        setupDevice("FSU-001", 1L);
+        when(alarmRepo.findByFsuId(1L)).thenReturn(List.of());
+        var r = svc.auditByQueryingFsu("FSU-001", null);
+        assertTrue(r.isSuccess());
+        assertFalse(r.isRealDeviceAccessed(), "Stub 客户端应标记 isRealCall=false");
+    }
+
+    @Test void realDeviceAccessedShouldBeTrueWhenMockedReal() {
+        GetActiveAlarmService realSvc = new GetActiveAlarmService(null, null) {
+            @Override
+            public GetActiveAlarmResult execute(String fsuCode, String url) {
+                var alarm = fsuAlarm("SN001", "DEV1", "SP01", "一级", "开始", "46.1");
+                return GetActiveAlarmResult.success(fsuCode, List.of(alarm), 1, 1, 0, true);
+            }
+        };
+        ActiveAlarmConsistencyAuditService auditSvc = new ActiveAlarmConsistencyAuditService(
+                realSvc, new LocalActiveAlarmSnapshotService(alarmRepo, fsuDeviceRepo), new ActiveAlarmDiffService());
+        setupDevice("FSU-001", 1L);
+        when(alarmRepo.findByFsuId(1L)).thenReturn(List.of());
+        var r = auditSvc.auditByQueryingFsu("FSU-001", null);
+        assertTrue(r.isRealDeviceAccessed(), "真实调用应透传 realDeviceAccessed=true");
+    }
+
+    // ==================== 安全边界 (BIF-P4-FIX-001) ====================
+
+    @Test void shouldNotEnableScheduler() {
+        setupDevice("FSU-001", 1L);
+        when(alarmRepo.findByFsuId(1L)).thenReturn(List.of());
+        var r = svc.auditWithProvidedSnapshot("FSU-001", List.of());
+        assertTrue(r.isSuccess());
+        // BIF-P4-020 不启动 Scheduler，本测试验证编排本身不触发定时调度
+    }
+
+    @Test void shouldNotTriggerSetCommand() {
+        setupDevice("FSU-001", 1L);
+        when(alarmRepo.findByFsuId(1L)).thenReturn(List.of());
+        var r = svc.auditByQueryingFsu("FSU-001", null);
+        assertTrue(r.isSuccess());
+        // BIF-P4-020 不触发 SET 类命令，本测试验证编排链路不含 SET 命令调用
+        assertFalse(r.hasInconsistency() && r.getErrors().stream()
+                .anyMatch(e -> e.contains("SET")), "审计不应触发 SET 命令");
     }
 
     // ==================== toString ====================

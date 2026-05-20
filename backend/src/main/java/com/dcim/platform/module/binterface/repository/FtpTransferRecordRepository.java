@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface FtpTransferRecordRepository extends JpaRepository<FtpTransferRecordEntity, Long> {
-    List<FtpTransferRecordEntity> findByFsuIdOrderByTransferTimeDesc(Long fsuId);
+    List<FtpTransferRecordEntity> findByFsuCodeOrderByTransferTimeDesc(String fsuCode);
 }

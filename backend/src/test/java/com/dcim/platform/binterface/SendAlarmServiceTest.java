@@ -508,5 +508,8 @@ class SendAlarmServiceTest {
                             && alarmStatus.equals(e.getAlarmStatus()))
                     .findFirst();
         }
+        @Override public Optional<AlarmRecordEntity> findByFsuIdAndSerialNo(Long fsuId, String serialNo) { return Optional.empty(); }
+        @Override public Optional<AlarmRecordEntity> findByFsuIdAndDeviceIdAndPointCodeAndAlarmStatus(Long fsuId, String deviceId, String pointCode, String status) { return Optional.empty(); }
+        @Override public List<AlarmRecordEntity> findByFsuIdAndAlarmStatus(Long fsuId, String status) { return List.of(); }
     }
 }

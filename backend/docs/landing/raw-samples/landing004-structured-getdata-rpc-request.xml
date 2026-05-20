@@ -1,0 +1,33 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://FSUService.chinatowercom.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Body>
+    <ns1:invoke>
+      <xmlData xsi:type="SOAP-ENC:string">
+        <Request>
+            
+          <PK_Type>
+                
+            <Name>GET_DATA</Name>
+                
+            <Code>501</Code>
+              
+          </PK_Type>
+            
+          <Info>
+                
+            <FSUCode>FSU-001</FSUCode>
+              
+          </Info>
+            
+          <xmlData>
+                
+            <SignalID>TEMP-R01</SignalID>
+                
+            <SignalID>HUMI-R01</SignalID>
+              
+          </xmlData>
+          
+        </Request>
+      </xmlData>
+    </ns1:invoke>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

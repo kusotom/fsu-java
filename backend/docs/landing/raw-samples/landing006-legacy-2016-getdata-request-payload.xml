@@ -1,0 +1,13 @@
+<Request>
+  <PK_Type>
+    <Name>GET_DATA</Name>
+    <Code>401</Code>
+  </PK_Type>
+  <Info>
+    <FSUCode>51051243812345</FSUCode>
+  </Info>
+  <xmlData>
+    <SignalID>TEMP-R01</SignalID>
+    <SignalID>HUMI-R01</SignalID>
+  </xmlData>
+</Request>

@@ -61,15 +61,15 @@ public class LocalActiveAlarmSnapshotService {
     }
 
     /**
-     * AlarmRecordEntity → LocalAlarmSnapshot 映射。
+     * AlarmRecordEntity → LocalAlarmSnapshot 映射 (LANDING-001 增强)。
      *
-     * <p>注意：AlarmRecordEntity 无 serialNo/deviceId 字段，映射为 null。
+     * <p>serialNo/deviceId 从实体读取（可空），用于精确匹配。
      * pointCode → spid, alarmStatus → alarmFlag, alarmValue → triggerVal。</p>
      */
     public ActiveAlarmDiffService.LocalAlarmSnapshot toSnapshot(AlarmRecordEntity e, String suid) {
         return ActiveAlarmDiffService.LocalAlarmSnapshot.of(
-                null,                           // serialNo: not in entity
-                null,                           // deviceId: not in entity
+                e.getSerialNo(),                // serialNo (LANDING-001)
+                e.getDeviceId(),                // deviceId (LANDING-001)
                 e.getPointCode(),               // spid
                 e.getAlarmLevel(),              // alarmLevel
                 e.getAlarmStatus(),             // alarmFlag (ACTIVE/CLEARED)

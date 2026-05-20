@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.dcim.platform.binterface.service.SetThresholdServiceTest
 -------------------------------------------------------------------------------
-Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.dcim.platform.binterface.service.SetThresholdServiceTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.dcim.platform.binterface.service.SetThresholdServiceTest

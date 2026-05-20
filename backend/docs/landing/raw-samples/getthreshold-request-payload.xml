@@ -1,0 +1,12 @@
+<Request>
+  <PK_Type>GET_THRESHOLD</PK_Type>
+  <Info>
+    <FSUCode>FSU-001</FSUCode>
+  </Info>
+  <xmlData>
+    <SignalID>TEMP-R01</SignalID>
+    
+    <SignalID>HUMI-R01</SignalID>
+    
+  </xmlData>
+</Request>

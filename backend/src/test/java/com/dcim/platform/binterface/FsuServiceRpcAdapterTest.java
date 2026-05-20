@@ -296,6 +296,96 @@ class FsuServiceRpcAdapterTest {
                 "Fault 应说明方法未实现/未识别");
     }
 
+    // ==================== LANDING-004: 嵌套 XML 声明容错测试 ====================
+
+    @Test
+    void shouldStripXmlDeclarationFromText() {
+        String text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response><PK_Type>GET_DATA</PK_Type></Response>";
+        String result = FsuServiceRpcAdapter.stripXmlDeclaration(text);
+        assertFalse(result.startsWith("<?xml"), "应去除 XML 声明");
+        assertTrue(result.startsWith("<Response"), "应以 Response 开头");
+        assertTrue(result.contains("GET_DATA"), "应保留业务内容");
+    }
+
+    @Test
+    void shouldStripXmlDeclarationWithCrLf() {
+        String text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Response><Info/></Response>";
+        String result = FsuServiceRpcAdapter.stripXmlDeclaration(text);
+        assertTrue(result.startsWith("<Response"), "应去除含 CRLF 的 XML 声明");
+    }
+
+    @Test
+    void shouldNotModifyTextWithoutDeclaration() {
+        String text = "<Response><PK_Type>GET_DATA</PK_Type></Response>";
+        String result = FsuServiceRpcAdapter.stripXmlDeclaration(text);
+        assertEquals(text, result, "无声明文本不应被修改");
+    }
+
+    @Test
+    void shouldHandleNullAndEmpty() {
+        assertEquals(null, FsuServiceRpcAdapter.stripXmlDeclaration(null));
+        assertEquals("", FsuServiceRpcAdapter.stripXmlDeclaration(""));
+    }
+
+    @Test
+    void shouldNotStripDeclarationFromMiddleOfText() {
+        String text = "<Data><?xml version=\"1.0\"?></Data>";
+        String result = FsuServiceRpcAdapter.stripXmlDeclaration(text);
+        assertEquals(text, result, "中间的声明不应被剥离");
+    }
+
+    @Test
+    void shouldUnwrapResponseWithNestedXmlDeclaration() {
+        // 模拟 LANDING-003 中 GET_DATA 的真实响应场景。
+        // 真实 FSU 在 <invokeReturn> 中对 XML 声明做了实体转义:
+        // &lt;?xml version="1.0"?&gt;<Response>...</Response>
+        // getTextContent() 自动反转义，得到嵌套 XML 声明。
+        String innerWithDecl = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Response>"
+                + "<PK_Type><Name>SEND_ALARM</Name><Code>601</Code></PK_Type>"
+                + "<Info><Values><TAlarmList/></Values></Info>"
+                + "</Response>";
+        String rpcResponse = buildRpcResponseWithEscapedContent(innerWithDecl);
+
+        String result = adapter.unwrapResponsePayload(rpcResponse);
+
+        assertNotNull(result);
+        assertTrue(result.contains("Envelope"), "解包后应为有效 SOAP Envelope");
+        assertTrue(result.contains("Response"), "应包含 Response");
+        assertTrue(result.contains("SEND_ALARM"), "应保留 SEND_ALARM");
+        // 验证可被 DOM 解析（不抛异常）
+        assertDoesNotThrow(() -> parseXml(result));
+    }
+
+    @Test
+    void shouldUnwrapEmptyInvokeReturn() {
+        String rpcWithEmptyReturn = "<SOAP-ENV:Envelope"
+                + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\""
+                + " xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\""
+                + " xmlns:ns1=\"http://FSUService.chinatowercom.com\">"
+                + "<SOAP-ENV:Body>"
+                + "<ns1:invokeResponse>"
+                + "<invokeReturn/>"
+                + "</ns1:invokeResponse>"
+                + "</SOAP-ENV:Body>"
+                + "</SOAP-ENV:Envelope>";
+
+        String result = adapter.unwrapResponsePayload(rpcWithEmptyReturn);
+        assertNotNull(result);
+        assertTrue(result.contains("Response"), "空 invokeReturn 应生成空 Response");
+    }
+
+    @Test
+    void standardXmlUnaffectedByStripDeclaration() {
+        // 验证标准响应不受影响
+        String rpcResponse = buildRpcResponse(RESPONSE_PAYLOAD);
+        String result = adapter.unwrapResponsePayload(rpcResponse);
+        assertNotNull(result);
+        assertTrue(result.contains("ResultCode"), "标准响应应正常解包");
+        assertTrue(result.contains("LoginInfo"), "标准响应应保留 LoginInfo");
+        assertDoesNotThrow(() -> parseXml(result));
+    }
+
     // ==================== 辅助方法 ====================
 
     private Document parseXml(String xml) throws Exception {
@@ -345,6 +435,31 @@ class FsuServiceRpcAdapterTest {
                 + "<ns1:invokeResponse>"
                 + "<invokeReturn xsi:type=\"SOAP-ENC:string\">"
                 + innerResponseXml
+                + "</invokeReturn>"
+                + "</ns1:invokeResponse>"
+                + "</SOAP-ENV:Body>"
+                + "</SOAP-ENV:Envelope>";
+    }
+
+    /**
+     * 构造模拟 RPC 响应，内部内容经 XML 实体转义。
+     * 模拟真实 FSU 返回格式: {@code <invokeReturn>&lt;?xml ...?&gt;<Response/></invokeReturn>}
+     */
+    private String buildRpcResponseWithEscapedContent(String innerResponseXml) {
+        String escaped = innerResponseXml
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
+        return "<SOAP-ENV:Envelope"
+                + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\""
+                + " xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\""
+                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+                + " xmlns:ns1=\"http://FSUService.chinatowercom.com\">"
+                + "<SOAP-ENV:Body>"
+                + "<ns1:invokeResponse>"
+                + "<invokeReturn xsi:type=\"SOAP-ENC:string\">"
+                + escaped
                 + "</invokeReturn>"
                 + "</ns1:invokeResponse>"
                 + "</SOAP-ENV:Body>"

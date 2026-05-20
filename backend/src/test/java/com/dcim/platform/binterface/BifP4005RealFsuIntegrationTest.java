@@ -14,10 +14,13 @@ import com.dcim.platform.module.binterface.service.fsu.FsuServiceRpcAdapter;
 import com.dcim.platform.module.binterface.service.fsu.RealHttpFsuServiceClient;
 import com.dcim.platform.module.binterface.soap.SoapMessageHandler;
 import com.dcim.platform.module.binterface.xml.XmlDataParser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>执行顺序：GET_LOGININFO → TIME_CHECK → GET_DATA → GET_THRESHOLD → GET_FTP</p>
  */
+@Disabled("Real FSU integration test; run manually with -DrealFsuTest.enabled=true")
+@Tag("real-fsu")
+@EnabledIfSystemProperty(named = "realFsuTest.enabled", matches = "true")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BifP4005RealFsuIntegrationTest {
 

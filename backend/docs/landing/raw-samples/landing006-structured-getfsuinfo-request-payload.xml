@@ -1,0 +1,9 @@
+<Request>
+  <PK_Type>
+    <Name>GET_SUINFO</Name>
+    <Code>1001</Code>
+  </PK_Type>
+  <Info>
+    <FSUCode>51051243812345</FSUCode>
+  </Info>
+</Request>

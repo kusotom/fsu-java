@@ -1,0 +1,6 @@
+<Request>
+  <PK_Type>GET_ACTIVEALARM</PK_Type>
+  <Info>
+    <SUID>FSU-001</SUID>
+  </Info>
+</Request>
