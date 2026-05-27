@@ -1,6 +1,12 @@
 server:
   port: 8080
 
+app:
+  auth:
+    sms:
+      dev-code-enabled: false
+      dev-code: "123456"
+
 spring:
   application:
     name: dcim-platform

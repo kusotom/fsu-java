@@ -76,8 +76,8 @@
 | # | 问题 | 严重程度 | 建议 |
 |---|------|----------|------|
 | 1 | **WSDL 路径不一致**: WSDL `/services/SCService`, Controller `/api/b-interface/sc-service` | 中 | FSU 配置时需使用实际路径; 考虑在平台侧添加路径映射 |
-| 2 | **报文日志未实现**: `BInterfaceMessageLogService` 为 TODO 占位 | 高 | 下一阶段实现, 否则无法保存原始 SOAP 报文 |
-| 3 | **SPID 未入库**: `SendAlarmService` 提取 SPID 但不写入 alarm_record | 中 | alarm_record 表缺少 spid 列, LANDING-001 已补强 serialNo/deviceId, spid 为下一项 |
+| 2 | ~~**报文日志未实现**~~ | ~~高~~ | ✅ **已实现**: BInterfaceMessageLogService 完整实现, ScServiceController 入口记录入站报文 |
+| 3 | ~~**SPID 未入库**~~ | ~~中~~ | ✅ **已修复**: alarm_record 新增 spid 列, SendAlarmService 写入 spid |
 | 4 | **SEND_DATA 无 DeviceID**: 仅按 SignalID 匹配, 无法区分同 SignalID 不同 DeviceID | 中 | 需确认真实 FSU 的 SEND_DATA 格式是否包含 DeviceID |
 | 5 | **ACK 格式无 Name+Code**: 响应始终使用纯文本 PK_Type | 低 | FSU 可能期望 Name+Code 格式 ACK, 待验证 |
 
@@ -89,16 +89,25 @@
 | `docs/landing/FSU-SC-CONFIGURATION-GUIDE.md` | FSU 侧配置指南 |
 | `docs/landing/PASSIVE-REPORTING-CHECKLIST.md` | 联调检查清单 |
 | `docs/audit/LANDING-008-passive-reporting-readiness.md` | 本审计报告 |
+| `BInterfaceMessageLogServiceTest.java` | 11 测试: 保存/不回抛/SOAP完整性/查询 |
+| `BInterfaceMessageLogService.java` | 报文日志服务（重写，原为 TODO 占位） |
 
-## 6. 未修改文件
+## 6. 修改文件
 
-业务代码 0 修改 — 仅文档编写。
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `ScServiceController.java` | **修改** | 注入 BInterfaceMessageLogService；入口处记录入站原始报文 |
+| `AlarmRecordEntity.java` | **修改** | 新增 spid 字段（@Column nullable） |
+| `SendAlarmService.java` | **修改** | buildAlarmEntity() + 恢复路径补写 spid |
+| `SendAlarmServiceTest.java` | **修改** | 新增 2 测试：SPID 写入 + 恢复回填 |
 
 ## 7. 安全边界
 
 - [x] 未执行 SET
 - [x] 未启用 Scheduler
 - [x] 未主动访问真实 FSU
-- [x] 未修改 alarm_record 状态机
+- [x] 未修改 alarm_record 状态机（仅新增 spid 列，不改变 ACTIVE/RECOVERED 流转逻辑）
 - [x] 未生成正式 seed SQL
-- [x] 全量测试无回归 (1164 tests, 0 failures)
+- [x] 全量测试: 1177 tests, 0 failures, 0 errors, 5 skipped
+- [x] contextLoads 通过（新增 Bean 装配正确）
+- [x] 报文日志保存失败不影响 ACK（try-catch + return null）

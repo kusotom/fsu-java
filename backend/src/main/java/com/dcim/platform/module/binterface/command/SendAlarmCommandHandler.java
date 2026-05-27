@@ -98,12 +98,12 @@ public class SendAlarmCommandHandler implements CommandHandler {
         String alarmIdStr = sendResult.getAlarmIds().isEmpty()
                 ? "0" : String.valueOf(sendResult.getAlarmIds().get(sendResult.getAlarmIds().size() - 1));
 
-        String infoXml = "<ResultCode>0</ResultCode>"
+        String infoXml = "<Result>1</Result>"
                 + "<AlarmID>" + alarmIdStr + "</AlarmID>";
 
         CommandResult result = new CommandResult();
         result.setSuccess(true);
-        result.setResultCode("0");
+        result.setResultCode("1");
         result.setResultDesc("告警上报成功");
         result.setPkType(BInterfacePkType.SEND_ALARM);
         result.setImplemented(true);

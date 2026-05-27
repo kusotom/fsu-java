@@ -121,7 +121,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandContext loginCtx = loginContext();
         CommandResult loginResult = loginHandler.handle(loginCtx);
         assertTrue(loginResult.isSuccess(), "LOGIN 应成功");
-        assertEquals("0", loginResult.getResultCode());
+        assertEquals("1", loginResult.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
 
         // 验证 Session 已创建
         assertTrue(loginService.isLoggedIn(FSU_CODE), "LOGIN 后 isLoggedIn 应为 true");
@@ -130,7 +130,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandContext hbCtx = heartbeatContext(FSU_CODE);
         CommandResult hbResult = heartbeatHandler.handle(hbCtx);
         assertTrue(hbResult.isSuccess(), "HEARTBEAT 应成功");
-        assertEquals("0", hbResult.getResultCode());
+        assertEquals("1", hbResult.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
 
         // 验证 lastHeartbeat 已更新
         Optional<BInterfaceFsuStatusEntity> status = loginService.getStatus(FSU_CODE);
@@ -141,7 +141,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandContext sdCtx = sendDataContext(FSU_CODE, "2026-05-14T10:30:00+08:00", createSendDataXml());
         CommandResult sdResult = sendDataHandler.handle(sdCtx);
         assertTrue(sdResult.isSuccess(), "SEND_DATA 应成功");
-        assertEquals("0", sdResult.getResultCode());
+        assertEquals("1", sdResult.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
 
         // 验证实时数据已写入
         assertEquals(3, realtimeDataRepo.findAll().size(), "应有 3 条实时数据");
@@ -150,7 +150,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandContext saCtx = sendAlarmContext(FSU_CODE, "2026-05-14T10:33:00+08:00", createSendAlarmXml());
         CommandResult saResult = sendAlarmHandler.handle(saCtx);
         assertTrue(saResult.isSuccess(), "SEND_ALARM 应成功");
-        assertEquals("0", saResult.getResultCode());
+        assertEquals("1", saResult.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
 
         // 验证告警已写入
         assertEquals(2, alarmRecordRepo.findAll().size(), "应有 2 条告警记录");
@@ -192,7 +192,7 @@ class BInterfaceMainFlowIntegrationTest {
         loginHandler.handle(loginContext());
         CommandResult result = heartbeatHandler.handle(heartbeatContext(FSU_CODE));
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
     }
 
     @Test
@@ -201,7 +201,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandResult result = sendDataHandler.handle(
                 sendDataContext(FSU_CODE, null, createSendDataXml()));
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
     }
 
     @Test
@@ -210,7 +210,7 @@ class BInterfaceMainFlowIntegrationTest {
         CommandResult result = sendAlarmHandler.handle(
                 sendAlarmContext(FSU_CODE, null, createSendAlarmXml()));
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
     }
 
     // ============================================================

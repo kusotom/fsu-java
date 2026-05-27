@@ -20,6 +20,10 @@ public class ActiveAlarmAuditSchedulerProperties {
     private long initialDelayMs = 60_000;
     /** 目标 FSU 编码 */
     private String fsuCode;
+    /** 是否允许真实 FSU 调用，默认 false */
+    private boolean realCallEnabled = false;
+    /** 允许真实调用的 FSU 白名单，为空时禁止所有 */
+    private java.util.List<String> allowedSuids = java.util.List.of();
 
     public boolean isSchedulerEnabled() { return schedulerEnabled; }
     public void setSchedulerEnabled(boolean v) { this.schedulerEnabled = v; }
@@ -32,4 +36,15 @@ public class ActiveAlarmAuditSchedulerProperties {
 
     public String getFsuCode() { return fsuCode; }
     public void setFsuCode(String v) { this.fsuCode = v; }
+
+    public boolean isRealCallEnabled() { return realCallEnabled; }
+    public void setRealCallEnabled(boolean v) { this.realCallEnabled = v; }
+
+    public java.util.List<String> getAllowedSuids() { return allowedSuids; }
+    public void setAllowedSuids(java.util.List<String> v) { this.allowedSuids = v; }
+
+    public boolean isRealCallAllowed(String suid) {
+        return realCallEnabled && suid != null
+                && (allowedSuids.isEmpty() || allowedSuids.contains(suid));
+    }
 }

@@ -58,10 +58,10 @@ public class CommandResult {
         CommandResult result = new CommandResult();
         result.pkType = pkType;
         result.success = false;
-        result.resultCode = "1";
+        result.resultCode = "0";
         result.resultDesc = "Handler not implemented (BIF-P1 pending)";
         result.implemented = false;
-        result.responseInfoXml = "<ResultCode>1</ResultCode>";
+        result.responseInfoXml = "<Result>0</Result>";
         return result;
     }
 
@@ -72,10 +72,10 @@ public class CommandResult {
         CommandResult result = new CommandResult();
         result.pkType = pkType;
         result.success = true;
-        result.resultCode = "0";
+        result.resultCode = "1";
         result.resultDesc = "OK";
         result.implemented = true;
-        result.responseInfoXml = "<ResultCode>0</ResultCode>";
+        result.responseInfoXml = "<Result>1</Result>";
         return result;
     }
 
@@ -89,7 +89,7 @@ public class CommandResult {
         result.resultCode = resultCode;
         result.resultDesc = message;
         result.implemented = false;
-        result.responseInfoXml = "<ResultCode>" + resultCode + "</ResultCode>";
+        result.responseInfoXml = "<Result>" + resultCode + "</Result>";
         result.addError(message);
         return result;
     }

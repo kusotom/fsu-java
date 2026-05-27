@@ -74,6 +74,7 @@ public class GetLoginInfoService {
                     .fsuCode(fsuCode)
                     .serviceUrl(effectiveServiceUrl)
                     .pkType(BInterfacePkType.GET_LOGININFO)
+                    .pkTypeFormat("legacy-2016")
                     .infoXml(infoXml)
                     .build();
 

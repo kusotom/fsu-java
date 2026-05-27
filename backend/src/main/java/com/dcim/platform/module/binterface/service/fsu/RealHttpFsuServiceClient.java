@@ -9,11 +9,11 @@ import com.dcim.platform.module.binterface.xml.XmlDataModel;
 import com.dcim.platform.module.binterface.xml.XmlDataParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -41,8 +41,6 @@ import java.nio.charset.StandardCharsets;
  *   <li>SOAPAction 按 WSDL 设为空字符串</li>
  * </ul>
  */
-@Component
-@ConditionalOnProperty(name = "b-interface.fsu-client.real-call-enabled", havingValue = "true")
 public class RealHttpFsuServiceClient implements FsuServiceClient {
 
     private static final Logger log = LoggerFactory.getLogger(RealHttpFsuServiceClient.class);
@@ -55,28 +53,54 @@ public class RealHttpFsuServiceClient implements FsuServiceClient {
     private final FsuServiceRpcAdapter rpcAdapter;
     private final int connectTimeoutMs;
     private final int readTimeoutMs;
+    private final Proxy proxy;
 
     public RealHttpFsuServiceClient(SoapMessageHandler soapMessageHandler,
                                      XmlDataParser xmlDataParser,
                                      FsuServiceRpcAdapter rpcAdapter) {
-        this.soapMessageHandler = soapMessageHandler;
-        this.xmlDataParser = xmlDataParser;
-        this.rpcAdapter = rpcAdapter;
-        this.connectTimeoutMs = 3000;
-        this.readTimeoutMs = 5000;
-        log.warn("RealHttpFsuServiceClient 已启用（真实 FSU 调用已开启，RPC 适配版）");
+        this(soapMessageHandler, xmlDataParser, rpcAdapter, 3000, 5000, null);
     }
 
     public RealHttpFsuServiceClient(SoapMessageHandler soapMessageHandler,
                                      XmlDataParser xmlDataParser,
                                      FsuServiceRpcAdapter rpcAdapter,
                                      int connectTimeoutMs, int readTimeoutMs) {
+        this(soapMessageHandler, xmlDataParser, rpcAdapter, connectTimeoutMs, readTimeoutMs, null);
+    }
+
+    /**
+     * Full constructor with optional HTTP proxy for FSU access through proxy.
+     *
+     * @param proxyHost proxy host (null or blank to disable)
+     * @param proxyPort proxy port
+     */
+    public RealHttpFsuServiceClient(SoapMessageHandler soapMessageHandler,
+                                     XmlDataParser xmlDataParser,
+                                     FsuServiceRpcAdapter rpcAdapter,
+                                     int connectTimeoutMs, int readTimeoutMs,
+                                     String proxyHost, int proxyPort) {
+        this(soapMessageHandler, xmlDataParser, rpcAdapter, connectTimeoutMs, readTimeoutMs,
+                buildProxy(proxyHost, proxyPort));
+    }
+
+    RealHttpFsuServiceClient(SoapMessageHandler soapMessageHandler,
+                              XmlDataParser xmlDataParser,
+                              FsuServiceRpcAdapter rpcAdapter,
+                              int connectTimeoutMs, int readTimeoutMs,
+                              Proxy proxy) {
         this.soapMessageHandler = soapMessageHandler;
         this.xmlDataParser = xmlDataParser;
         this.rpcAdapter = rpcAdapter;
         this.connectTimeoutMs = connectTimeoutMs;
         this.readTimeoutMs = readTimeoutMs;
-        log.warn("RealHttpFsuServiceClient 已启用（真实 FSU 调用已开启，RPC 适配版）");
+        this.proxy = proxy;
+        String proxyInfo = (proxy != null) ? ", proxy=" + proxy : "";
+        log.warn("RealHttpFsuServiceClient 已启用（真实 FSU 调用已开启，RPC 适配版" + proxyInfo + "）");
+    }
+
+    private static Proxy buildProxy(String host, int port) {
+        if (host == null || host.isBlank() || port <= 0) return null;
+        return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
     }
 
     @Override
@@ -164,7 +188,8 @@ public class RealHttpFsuServiceClient implements FsuServiceClient {
      */
     private String doHttpPost(String urlStr, String soapXml) throws Exception {
         URL url = URI.create(urlStr).toURL();
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpURLConnection conn = (HttpURLConnection) (proxy != null
+                ? url.openConnection(proxy) : url.openConnection());
         try {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", SOAP_CONTENT_TYPE);

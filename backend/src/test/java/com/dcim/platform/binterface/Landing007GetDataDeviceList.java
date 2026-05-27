@@ -151,8 +151,8 @@ public class Landing007GetDataDeviceList {
             if (withTSemaphore && i < TSEMAPHORE_IDS.length && TSEMAPHORE_IDS[i].length > 0) {
                 sb.append(">");
                 for (String tsId : TSEMAPHORE_IDS[i]) {
-                    sb.append("<TSemaphore Id=\"").append(tsId)
-                            .append("\" Code=\"").append(tsId).append("\"/>");
+                    if (tsId == null || tsId.isBlank()) continue;
+                    sb.append("<Id>").append(tsId).append("</Id>");
                 }
                 sb.append("</Device>");
             } else {

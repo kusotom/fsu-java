@@ -79,6 +79,7 @@ public class GetFtpService {
                     .fsuCode(fsuCode)
                     .serviceUrl(effectiveServiceUrl)
                     .pkType(BInterfacePkType.GET_FTP)
+                    .pkTypeFormat("legacy-2016")
                     .infoXml(infoXml.toString())
                     .build();
 

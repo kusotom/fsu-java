@@ -22,6 +22,9 @@ public class RoleEntity {
     @Column(length = 256)
     private String description;
 
+    @Column(name = "permissions", columnDefinition = "TEXT")
+    private String permissions;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

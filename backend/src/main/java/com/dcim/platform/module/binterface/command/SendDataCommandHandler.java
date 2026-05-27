@@ -95,12 +95,12 @@ public class SendDataCommandHandler implements CommandHandler {
                     sendResult.getResultCode(), sendResult.getResultDesc());
         }
 
-        String infoXml = "<ResultCode>0</ResultCode>"
+        String infoXml = "<Result>1</Result>"
                 + "<Count>" + sendResult.getAcceptedCount() + "</Count>";
 
         CommandResult result = new CommandResult();
         result.setSuccess(true);
-        result.setResultCode("0");
+        result.setResultCode("1");
         result.setResultDesc("数据上报成功");
         result.setPkType(BInterfacePkType.SEND_DATA);
         result.setImplemented(true);

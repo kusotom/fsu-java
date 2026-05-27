@@ -82,6 +82,7 @@ public class GetThresholdService {
                     .fsuCode(fsuCode)
                     .serviceUrl(effectiveServiceUrl)
                     .pkType(BInterfacePkType.GET_THRESHOLD)
+                    .pkTypeFormat("legacy-2016")
                     .infoXml(infoXml)
                     .xmlDataXml(xmlDataXml)
                     .build();

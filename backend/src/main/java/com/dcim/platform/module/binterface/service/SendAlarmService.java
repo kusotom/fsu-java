@@ -141,6 +141,8 @@ public class SendAlarmService {
         String serialNo = null;
         String deviceId = null;
         String spid = null;
+        String deviceCode = null;
+        String alarmFlag = null;
 
         for (Map.Entry<String, String> entry : item.entrySet()) {
             String key = entry.getKey();
@@ -150,8 +152,12 @@ public class SendAlarmService {
                 serialNo = entry.getValue();
             } else if (key.equalsIgnoreCase("DeviceID")) {
                 deviceId = entry.getValue();
-            } else if (key.equalsIgnoreCase("SPID")) {
+            } else if (key.equalsIgnoreCase("SPID") || key.equalsIgnoreCase("ID")) {
                 spid = entry.getValue();
+            } else if (key.equalsIgnoreCase("DeviceCode")) {
+                deviceCode = entry.getValue();
+            } else if (key.equalsIgnoreCase("AlarmFlag")) {
+                alarmFlag = entry.getValue();
             } else if (key.equalsIgnoreCase("AlarmCode")) {
                 alarmCode = entry.getValue();
             } else if (key.equalsIgnoreCase("AlarmName")) {
@@ -167,22 +173,28 @@ public class SendAlarmService {
             }
         }
 
+        // 2016 兼容: ID 可作为 SignalID 备选
+        if (signalId == null && spid != null) {
+            signalId = spid;
+        }
+
         if (signalId == null || signalId.trim().isEmpty()) {
             return new AlarmParseResult(false, null, null, null, null, null, null, null,
-                    null, null, null, false, "缺少 SignalID");
+                    null, null, null, null, null, false, "缺少 SignalID");
         }
         if (alarmCode == null || alarmCode.trim().isEmpty()) {
             return new AlarmParseResult(false, signalId, null, null, null, null, null, null,
-                    null, null, null, false,
+                    null, null, null, null, null, false,
                     "SignalID=" + signalId + " 缺少 AlarmCode");
         }
         if (alarmLevel == null || alarmLevel.trim().isEmpty()) {
             return new AlarmParseResult(false, signalId, alarmCode, null, null, null, null, null,
-                    null, null, null, false,
+                    null, null, null, null, null, false,
                     "SignalID=" + signalId + " 缺少 AlarmLevel");
         }
 
-        boolean isRecover = ALARM_TYPE_RECOVER.equals(alarmType);
+        boolean isRecover = ALARM_TYPE_RECOVER.equals(alarmType)
+                || (!ALARM_TYPE_GENERATE.equals(alarmType) && "1".equals(alarmFlag));
         return new AlarmParseResult(true, signalId.trim(), alarmCode.trim(),
                 alarmName != null ? alarmName.trim() : null,
                 alarmLevel.trim(),
@@ -192,6 +204,8 @@ public class SendAlarmService {
                 serialNo != null ? serialNo.trim() : null,
                 deviceId != null ? deviceId.trim() : null,
                 spid != null ? spid.trim() : null,
+                deviceCode != null ? deviceCode.trim() : null,
+                alarmFlag != null ? alarmFlag.trim() : null,
                 isRecover, null);
     }
 
@@ -209,12 +223,15 @@ public class SendAlarmService {
                 existing.setAlarmDesc(parsed.alarmDesc);
                 existing.setClearTime(now);
                 existing.setUpdatedAt(now);
-                // LANDING-001: 补写 SerialNo/DeviceID（兼容旧数据）
+                // LANDING-008: 补写 SerialNo/DeviceID/SPID（兼容旧数据）
                 if (existing.getSerialNo() == null && parsed.serialNo != null) {
                     existing.setSerialNo(parsed.serialNo);
                 }
                 if (existing.getDeviceId() == null && parsed.deviceId != null) {
                     existing.setDeviceId(parsed.deviceId);
+                }
+                if (existing.getSpid() == null && parsed.spid != null) {
+                    existing.setSpid(parsed.spid);
                 }
                 return alarmRecordRepository.save(existing);
             } else {
@@ -241,11 +258,18 @@ public class SendAlarmService {
         entity.setPointCode(parsed.signalId);
         entity.setSerialNo(parsed.serialNo);
         entity.setDeviceId(parsed.deviceId);
+        entity.setSpid(parsed.spid);
         entity.setAlarmCode(parsed.alarmCode);
         entity.setAlarmName(parsed.alarmName);
         entity.setAlarmLevel(parsed.alarmLevel);
         entity.setAlarmValue(parsed.alarmValue);
-        entity.setAlarmDesc(parsed.alarmDesc);
+        // 2016 DeviceCode 写入 alarmDesc 补充（不覆盖原始描述）
+        String descWithDeviceCode = parsed.alarmDesc;
+        if (parsed.deviceCode != null && !parsed.deviceCode.isEmpty()) {
+            descWithDeviceCode = (descWithDeviceCode != null ? descWithDeviceCode : "")
+                    + " [DeviceCode=" + parsed.deviceCode + "]";
+        }
+        entity.setAlarmDesc(descWithDeviceCode);
         entity.setOccurTime(alarmTime);
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
@@ -278,6 +302,8 @@ public class SendAlarmService {
         final String serialNo;
         final String deviceId;
         final String spid;
+        final String deviceCode;
+        final String alarmFlag;
         final boolean isRecover;
         final String error;
 
@@ -285,6 +311,7 @@ public class SendAlarmService {
                          String alarmName, String alarmLevel, String alarmValue,
                          String alarmDesc, String alarmType,
                          String serialNo, String deviceId, String spid,
+                         String deviceCode, String alarmFlag,
                          boolean isRecover, String error) {
             this.valid = valid;
             this.signalId = signalId;
@@ -297,6 +324,8 @@ public class SendAlarmService {
             this.serialNo = serialNo;
             this.deviceId = deviceId;
             this.spid = spid;
+            this.deviceCode = deviceCode;
+            this.alarmFlag = alarmFlag;
             this.isRecover = isRecover;
             this.error = error;
         }

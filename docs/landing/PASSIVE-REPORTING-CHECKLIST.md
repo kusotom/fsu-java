@@ -87,8 +87,10 @@
 - [ ] 报文保存方向标记为 `FSU→SC`
 - [ ] 报文包含完整 SOAP Envelope
 - [ ] 报文不丢失 XML 声明和命名空间
-- [ ] **(待实现)**: BInterfaceMessageLogService 保存到 b_interface_message_log 表
-- [ ] **(临时方案)**: 可先通过应用日志或抓包工具查看
+- [x] **(已实现)**: BInterfaceMessageLogService 保存到 b_interface_message_log 表
+- [x] **(已实现)**: DELETE /cleanup 手动清理接口 (LANDING-010)
+- [x] **(已实现)**: GET /query 分页多条件查询 (LANDING-010)
+- [ ] 高并发下日志写入性能验证
 
 ## 9. DeviceID / SPID 映射检查
 
@@ -97,7 +99,7 @@
 - [ ] monitoring_point 表已导入映射记录
 - [ ] SEND_DATA 的 SignalID 能匹配到 monitoring_point
 - [ ] 未匹配的 DeviceID/SPID 有记录可追踪
-- [ ] **SPID 入库**: alarm_record.spid 列待补充 (当前 alarm_record 表无此列)
+- [x] **SPID 入库**: alarm_record.spid 列已补充 (Entity 已新增, 需后续同步 schema DDL)
 
 ## 10. alarm_record 字段检查
 
@@ -109,7 +111,7 @@
 - [ ] occurTime 已写入
 - [ ] clearTime (恢复时) 已写入
 - [ ] fsuId 已关联
-- [ ] **spid 未写入** (alarm_record 表无此列 — 已知缺口)
+- [x] **spid 已写入** (LANDING-008 实施阶段: Entity + SendAlarmService 已补齐, schema DDL 待同步)
 
 ## 11. 安全边界检查
 

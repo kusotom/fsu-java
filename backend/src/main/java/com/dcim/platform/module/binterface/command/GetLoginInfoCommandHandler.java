@@ -86,11 +86,11 @@ public class GetLoginInfoCommandHandler implements CommandHandler {
 
         if (result.isSuccess()) {
             cmdResult.setSuccess(true);
-            cmdResult.setResultCode("0");
+            cmdResult.setResultCode("1");
             cmdResult.setResultDesc("查询成功");
 
-            // Info: <ResultCode>0</ResultCode>
-            String responseInfoXml = "<ResultCode>0</ResultCode>";
+            // Info: <Result>1</Result> per SPEC-2016-RESULT-001 (SUCCESS=1)
+            String responseInfoXml = "<Result>1</Result>";
 
             // xmlData: LoginInfo
             XmlDataModel xmlData = new XmlDataModel();
@@ -111,7 +111,7 @@ public class GetLoginInfoCommandHandler implements CommandHandler {
             cmdResult.setResultCode(result.getResultCode());
             cmdResult.setResultDesc(result.getResultDesc());
             cmdResult.setResponseInfoXml(
-                    "<ResultCode>" + result.getResultCode() + "</ResultCode>");
+                    "<Result>" + result.getResultCode() + "</Result>");
             if (result.hasErrors()) {
                 result.getErrors().forEach(cmdResult::addError);
             }
@@ -126,7 +126,7 @@ public class GetLoginInfoCommandHandler implements CommandHandler {
         result.setResultCode(resultCode);
         result.setResultDesc(message);
         result.setImplemented(true);
-        result.setResponseInfoXml("<ResultCode>" + resultCode + "</ResultCode>");
+        result.setResponseInfoXml("<Result>" + resultCode + "</Result>");
         result.addError(message);
         return result;
     }

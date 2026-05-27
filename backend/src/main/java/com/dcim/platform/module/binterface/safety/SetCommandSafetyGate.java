@@ -28,6 +28,13 @@ public class SetCommandSafetyGate {
     /** 高风险命令 Code。 */
     static final Set<Integer> HIGH_RISK_CODES = Set.of(403, 701, 803, 1101);
 
+    /**
+     * BIF2016-SECURITY-001: B接口2016 标准 SET / 控制 / 配置类命令，全部默认高风险禁用。
+     * @see openspec/protocols/binterface-2016/09-security-boundary.md
+     */
+    static final Set<String> HIGH_RISK_SET_COMMANDS_2016 = Set.of(
+            "SET_POINT", "SET_LOGININFO", "SET_FTP", "SET_FSUREBOOT", "SET_THRESHOLD");
+
     private final SetCommandSafetyProperties properties;
 
     public SetCommandSafetyGate(SetCommandSafetyProperties properties) {
@@ -64,6 +71,19 @@ public class SetCommandSafetyGate {
         boolean is2024Set = normOpt.map(c -> SET_COMMAND_CODES.contains(c.getCode())).orElse(false);
         boolean isHighRisk = normOpt.map(c -> HIGH_RISK_CODES.contains(c.getCode())).orElse(false);
         boolean isCompatSet = !is2024Set && isLegacySetCommand(trimmed);
+        // BIF2016-SECURITY-001: compat / legacy SET commands are also high risk
+        if (isCompatSet) isHighRisk = true;
+
+        // BIF2016-SECURITY-001: unknown SET_* commands must not default-allow
+        boolean isUnknownSet = !is2024Set && !isCompatSet && trimmed.toUpperCase().startsWith("SET_");
+        if (isUnknownSet) {
+            return SetCommandSafetyDecision.builder()
+                    .allowed(false).commandName(commandName).normalizedCommandName(normalized)
+                    .suid(suid).highRisk(true)
+                    .reasonCode("UNKNOWN_SET_COMMAND")
+                    .reasonMessage("未知 SET 类命令，默认禁止: " + commandName)
+                    .addError("未知 SET 类命令不允许执行").build();
+        }
 
         if (!is2024Set && !isCompatSet) {
             return SetCommandSafetyDecision.builder()
@@ -144,5 +164,5 @@ public class SetCommandSafetyGate {
     }
 
     private static final Set<String> LEGACY_SET_NAMES = Set.of(
-            "SET_THRESHOLD", "SET_POINT", "SET_FTP", "SET_FSUREBOOT", "TIME_CHECK");
+            "SET_THRESHOLD", "SET_POINT", "SET_FTP", "SET_FSUREBOOT", "SET_LOGININFO", "TIME_CHECK");
 }

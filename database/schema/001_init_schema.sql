@@ -301,6 +301,12 @@ CREATE INDEX idx_alarm_record_fsu_time    ON alarm_record(fsu_id, occur_time);
 CREATE INDEX idx_alarm_record_status      ON alarm_record(alarm_status, occur_time);
 CREATE INDEX idx_alarm_record_level_time  ON alarm_record(alarm_level, occur_time);
 
+-- LANDING-009: alarm_record 字段补齐
+-- serial_no/device_id 来自 LANDING-001 (B接口2016 SEND_ALARM), spid 来自 LANDING-008
+ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS serial_no VARCHAR(128);
+ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS device_id VARCHAR(128);
+ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS spid VARCHAR(64);
+
 -- 13. 设备心跳表
 CREATE TABLE device_heartbeat (
     id              BIGSERIAL PRIMARY KEY,
@@ -445,12 +451,14 @@ BEGIN
 END $$;
 
 -- ============================================================
+-- LANDING-013-FIX-001: align historical b_interface_message_log.command_code with current entity
+-- 原因: Entity 映射到 command，但真实表有 command_code NOT NULL 历史约束
+--        Entity 不写入 command_code → INSERT 触发 not-null violation
+ALTER TABLE b_interface_message_log ALTER COLUMN command_code DROP NOT NULL;
+
 -- LANDING-001: 真实点位表接入前数据模型补强
 -- ============================================================
 
--- alarm_record 新增 SerialNo / DeviceID 字段
-ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS serial_no VARCHAR(128);
-ALTER TABLE alarm_record ADD COLUMN IF NOT EXISTS device_id VARCHAR(128);
-
+-- alarm_record 字段补齐已移至表定义区域 (LANDING-009 合并)
 -- fsu_device 新增 service_url 字段
 ALTER TABLE fsu_device ADD COLUMN IF NOT EXISTS service_url VARCHAR(512);

@@ -90,6 +90,54 @@ class SendAlarmServiceTest {
     }
 
     @Test
+    void shouldPersistSerialNoDeviceIdAndSpidOnAlarmGenerate() {
+        XmlDataModel xmlData = createXmlDataWithAlarms(
+                alarm("TEMP-001", "TEMP-HIGH", "温度过高", "WARN", "62.0", "超限", "0",
+                        "SN-20260520-001", "51051241820004", "SP-001")
+        );
+
+        sendAlarmService.processAlarms(FSU_CODE, null, xmlData);
+
+        List<AlarmRecordEntity> all = alarmRecordRepo.findAll();
+        assertEquals(1, all.size());
+        AlarmRecordEntity saved = all.get(0);
+        assertEquals("SN-20260520-001", saved.getSerialNo());
+        assertEquals("51051241820004", saved.getDeviceId());
+        assertEquals("SP-001", saved.getSpid());
+        assertEquals("ACTIVE", saved.getAlarmStatus());
+    }
+
+    @Test
+    void shouldBackfillSpidOnAlarmRecover() {
+        // 先创建一条 ACTIVE 告警（不含 SPID）
+        AlarmRecordEntity existing = new AlarmRecordEntity();
+        existing.setId(100L);
+        existing.setFsuId(FSU_ID);
+        existing.setPointCode("TEMP-001");
+        existing.setAlarmCode("TEMP-HIGH");
+        existing.setAlarmLevel("WARN");
+        existing.setAlarmStatus("ACTIVE");
+        existing.setOccurTime(LocalDateTime.now().minusHours(1));
+        existing.setCreatedAt(LocalDateTime.now().minusHours(1));
+        existing.setUpdatedAt(LocalDateTime.now().minusHours(1));
+        alarmRecordRepo.save(existing);
+
+        // 发送恢复告警（含 SPID）
+        XmlDataModel xmlData = createXmlDataWithAlarms(
+                alarm("TEMP-001", "TEMP-HIGH", null, "WARN", "25.0", "已恢复", "1",
+                        null, null, "SP-RECOVER-001")
+        );
+
+        sendAlarmService.processAlarms(FSU_CODE, null, xmlData);
+
+        List<AlarmRecordEntity> all = alarmRecordRepo.findAll();
+        assertEquals(1, all.size());
+        AlarmRecordEntity recovered = all.get(0);
+        assertEquals("RECOVERED", recovered.getAlarmStatus());
+        assertEquals("SP-RECOVER-001", recovered.getSpid());
+    }
+
+    @Test
     void shouldProcessMultipleAlarms() {
         XmlDataModel xmlData = createXmlDataWithAlarms(
                 alarm("TEMP-001", "TEMP-HIGH", "温度过高", "WARN", "62.0", "超限", "0"),
@@ -395,6 +443,16 @@ class SendAlarmServiceTest {
         if (alarmValue != null) map.put("AlarmValue", alarmValue);
         if (alarmDesc != null) map.put("AlarmDesc", alarmDesc);
         if (alarmType != null) map.put("AlarmType", alarmType);
+        return map;
+    }
+
+    private Map<String, String> alarm(String signalId, String alarmCode, String alarmName,
+                                       String alarmLevel, String alarmValue, String alarmDesc,
+                                       String alarmType, String serialNo, String deviceId, String spid) {
+        Map<String, String> map = alarm(signalId, alarmCode, alarmName, alarmLevel, alarmValue, alarmDesc, alarmType);
+        if (serialNo != null) map.put("SerialNo", serialNo);
+        if (deviceId != null) map.put("DeviceID", deviceId);
+        if (spid != null) map.put("SPID", spid);
         return map;
     }
 

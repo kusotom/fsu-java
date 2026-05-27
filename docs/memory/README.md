@@ -5,10 +5,41 @@
 > 命名规则：`YYYY-MM-DD-任务编号-简短任务名.md`
 >
 > 索引按日期倒序排列。
+- [2026-05-27 SPEC-DICT-P0-001 B接口2016字典码表全量分析](./2026-05-27-SPEC-DICT-P0-001-binterface-2016-dictionary-code-full-analysis.md) — 新增dictionary-code-matrix.md 1114条，覆盖协议docx码表、xlsx说明/设备类型/设备信号字典、工程ResultCode、Emerson差异，并新增12条unknown-dictionary-items
+- [2026-05-26 SPEC-TEST-P0-001 真实FSU只读Run-Once](./2026-05-26-SPEC-TEST-P0-001-real-fsu-run-once.md) — 新增默认禁用真实FSU只读测试，覆盖GET_DATA/GET_LOGININFO/GET_FTP/GET_FSUINFO/GET_THRESHOLD，主动GET_FSUINFO服务层测试通过，2026-05-27补测蓄电池总电压0407102001=53.9V，raw样本已保存，Emerson profile差异已登记
+- [2026-05-26 SPEC-TEST-P0-001 B接口2016标准主命令测试](./2026-05-26-SPEC-TEST-P0-001-binterface-2016-standard-command-tests.md) — 新增7类BInterface2016协议测试+standard/emerson fixture，`mvn test -Dtest='*BInterface2016*'` 编译通过但6个协议一致性断言失败，暴露2016/2024/ResultCode/SET安全门差异
+- [2026-05-26 SPEC-P0-001 B接口2016全文规范化](./2026-05-26-SPEC-P0-001-binterface-2016-full-protocol-specification.md)
 
+- [2026-05-25 BIF2016-CONNECTION-003-FIX-008 Memory归档补齐](2026-05-25-BIF2016-CONNECTION-003-FIX-008-memory-archive-completion.md) — 补齐FIX-003/FIX-005/FIX-006 root memory强制字段+audit同步+README索引更新
+- [2026-05-25 BIF2016-CONNECTION-003-FIX-006 ResultCode=1语义清理](2026-05-25-BIF2016-CONNECTION-003-FIX-006-resultcode1-semantic-cleanup.md) — WORKING-MEMORY同步, FAST-REALDATA-003A/003B旧口径清理, FIX-003/FIX-005归档补全
+- [2026-05-25 BIF2016-CONNECTION-003-FIX-005 Result=1文档口径清理](2026-05-25-BIF2016-CONNECTION-003-FIX-005-result1-doc-final-cleanup.md) — grep ABC分类, 当前有效文档Result=1失败口径清零, README/WORKING-MEMORY同步
+- [2026-05-25 BIF2016-CONNECTION-003-FIX-003 runGetDataProbe测试与Result修复](2026-05-25-BIF2016-CONNECTION-003-FIX-003-run-get-data-probe-test-and-doc-fix.md) — 33+30 tests, fake client/mock context, Result=1→SUCCESS, registrationContext路线
+- [2026-05-24 AI-FLOW-002-FIX-001 agentflow路径与门禁修复](2026-05-24-AI-FLOW-002-FIX-001-agentflow-path-policy-fix.md) — 路径统一到FSU/tools/agentflow/, baseline机制, forbidden_paths非零退出码, finish阻止违规
+- [2026-05-24 AI-FLOW-002 agentflow CLI MVP](2026-05-24-AI-FLOW-002-agentflow-cli-mvp.md) — agentflow.py 7命令MVP, 双根路径解析, status/start/check/finish/release/pack/decision
+- [2026-05-24 AI-FLOW-001-REV2 最终Agent分工工程流系统更新](2026-05-24-AI-FLOW-001-REV2-final-agent-roles.md) — 6-Agent模型正式写入, .agent/ + docs/ai-team/ 工程流系统, DATA-MAPPING-006预置PLANNED
+- [2026-05-21 FE-PLAN-001 前端总体规划](2026-05-21-FE-PLAN-001-binterface-frontend-overall-plan.md) — Vue3+TS+ElementPlus, 15 routes, 缺Pinia/ECharts/门限/点位树, FE-TODO清单
+- [2026-05-21 BACKEND-PROGRESS-SYNC 后端进度同步](2026-05-21-BACKEND-PROGRESS-SYNC-before-frontend-switch.md) — 后端82%~85%, 1297 tests, TASK-002阻塞, 切换前端
+- [2026-05-21 BIF2016-P1-002 PK_Type边界](2026-05-21-BIF2016-P1-002-pktype-alias-boundary.md) — BInterfacePkType 38→44项, legacy-2016路径审计安全, 1266 tests
+- [2026-05-21 BIF2016-P1-001 码表补齐](2026-05-21-BIF2016-P1-001-command2016-full-code-map.md) — BInterfaceCommand2016 5→30条目, 15命令+15ACK, 39新测试, 1255 tests
+- [2026-05-21 PRE-FIX-001 工程修复](2026-05-21-PRE-FIX-001-engineering-rules-memory-path.md) — 新建PROJECT_ENGINEERING_RULES.md, 修复memory断链
+- [2026-05-21 SPEC-2016-SPLIT-001 协议拆分](2026-05-21-SPEC-2016-SPLIT-001-binterface-2016-full-spec-split.md) — 37文件6目录, 15命令规范+3 profile+5矩阵
+- [2026-05-21 CODEX-AUDIT-2016-FULL-001 全版本审计](2026-05-21-CODEX-AUDIT-2016-FULL-001-binterface-full-version-audit.md) — 39个2016规范文件全量读取, 15命令逐项审计, 输出P0/P1/P2/P3任务清单
+- [2026-05-21 PROTOCOL-AUDIT-2016-001 协议审计](PROTOCOL-AUDIT-2016-001-binterface-code-format-audit.md) — 7命令码表+请求/响应格式对照, 确认emerson-2016变体, raw-samples缺口
+- [2026-05-21 LANDING-015-FIX-001 run-once测试](2026-05-21-LANDING-015-FIX-001-real-fsu-run-once-test.md) — 补齐Landing015RealFsuIntegrationTest, 移除@Disabled改用assumeTrue双保险, 1216 tests
+- [2026-05-21 LANDING-015 GET_FSUINFO轮询](2026-05-21-LANDING-015-binterface-2016-get-fsuinfo-heartbeat.md) — 2016 Code=1701主动轮询, ACK=1702严格校验, CPU/MEM→statusDetail, 1215 tests
+- [2026-05-21 PROTOCOL-BASELINE-001 协议基线](2026-05-21-PROTOCOL-BASELINE-001-binterface-2016-primary.md) — B接口2016确认为主开发依据, 2024调整为兼容层, 后续转向主动轮询
+- [2026-05-21 LANDING-014 连续上报观察](2026-05-21-LANDING-014-passive-reporting-continuous-observation.md) — HEARTBEAT/SEND_DATA/SEND_ALARM观察+入库验证, 0代码修改, 1204 tests
+- [2026-05-21 LANDING-013-FIX-001 Schema对齐](2026-05-21-LANDING-013-FIX-001-binterface-message-log-schema-alignment.md) — command_code DROP NOT NULL, 真实FSU LOGIN日志入库(id=399/400), 1204 tests
+- [2026-05-21 LANDING-013 报文日志持久化修复](2026-05-21-LANDING-013-message-log-persistence-fix.md) — saveAndFlush+@Transactional修复未入库, 成功日志可观测, 1204 tests
+- [2026-05-21 LANDING-012 标准SCService路径](2026-05-21-LANDING-012-standard-scservice-path.md) — 新增POST /services/SCService入口, 提取ScServiceProcessor, 1204 tests, 解决tcpdump JSON问题
+- [2026-05-21 READ-002 工作记忆加载](2026-05-21-READ-002-working-memory-load.md) — 读取父目录与 Java 项目工作记忆、规则和 OpenSpec 规则, 0业务代码修改, 未运行测试
+- [2026-05-20 LANDING-011 被动上报真实联调](2026-05-20-LANDING-011-passive-reporting-real-call.md) — SCService URL核验, 联调操作指引输出, 0代码修改, 1199 tests
+- [2026-05-20 LANDING-010 日志清理与查询增强](2026-05-20-LANDING-010-binterface-message-log-retention.md) — 分页查询+多条件过滤+手动清理, 3生产+2测试文件, 1199 tests
+- [2026-05-20 LANDING-009 alarm_record DDL 补齐](2026-05-20-LANDING-009-alarm-record-ddl-readiness.md) — 3条幂等ALTER TABLE补齐serial_no/device_id/spid, 合并LANDING-001旧DDL, 1177 tests
+- [2026-05-20 SPEC-INIT-001 OpenSpec + Superpowers 工作流初始化](2026-05-20-SPEC-INIT-001-openspec-superpowers-workflow.md) — 建立 spec/plan/memory/audit 四类文件闭环, 补全 openspec/ 目录, 为 LANDING-008 创建正式 spec 和 plan
 - [2026-05-20 OPENSPEC-CLI-001 CLI安装与校验](2026-05-20-OPENSPEC-CLI-001-openspec-cli-installed.md) — OpenSpec CLI v1.3.1 已安装, `openspec list`/`list --specs` 校验通过, 未执行 init
 - [2026-05-20 OPENSPEC-001 OpenSpec规格驱动层接入](2026-05-20-OPENSPEC-001-claude-openspec-rules.md) — 引入OpenSpec规范驱动层, 10强制场景+12字段Change模板, 纯文档接入无代码修改
-- [2026-05-20 LANDING-008 被动上报联调准备](2026-05-20-LANDING-008-passive-reporting-readiness.md) — SCService链路核对, 集成方案+FSU配置指南+检查清单, 0代码修改
+- [2026-05-20 LANDING-008 被动上报联调准备](2026-05-20-LANDING-008-passive-reporting-readiness.md) — BInterfaceMessageLogService实现+alarm_record.spid补齐, ScServiceController接入报文日志, 1177 tests
 - [2026-05-20 LANDING-007 GET_DATA真实DeviceID查询](2026-05-20-LANDING-007-binterface-2016-get-data-real-deviceid.md) — GET_DATA(401)+DeviceList协议核对, 4策略空响应, FSU当前无测量数据
 - [2026-05-20 LANDING-006 B接口2016码表兼容重试](2026-05-20-LANDING-006-binterface-2016-code-retry.md) — **突破**: 2016 Code首次获取FSU真实数据, CPU 14.95%/MEM 62.84%, 4 DeviceIDs
 - [2026-05-20 LANDING-005 真实FSUID只读重试](2026-05-20-LANDING-005-real-fsu-fsuid-readonly-retry.md) — FSUID=51051243812345 retry, 确认FSUID非根因, L-004/L-005逐字节相同

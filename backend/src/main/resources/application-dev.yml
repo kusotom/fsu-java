@@ -12,8 +12,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+app:
+  auth:
+    sms:
+      dev-code-enabled: true
+
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# BIF2016-PROXY-001: FSU HTTP 代理配置（dev 环境通过代理访问 FSU）
+b-interface:
+  fsu-client:
+    proxy:
+      enabled: false
+      host: 127.0.0.1
+      port: 7890

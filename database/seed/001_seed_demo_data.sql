@@ -184,3 +184,8 @@ INSERT INTO user_role (id, user_id, role_id) VALUES
 (3, 3, 3);  -- viewer -> VIEWER
 
 SELECT setval('user_role_id_seq', (SELECT MAX(id) FROM user_role));
+
+-- BACKEND-FE-API-001: 角色权限 seed（幂等 UPDATE）
+UPDATE role SET permissions = 'binterface.read,binterface.fsu.read,binterface.realtime.read,binterface.alarm.read,binterface.threshold.read,binterface.ftp.read,binterface.ftp_image.read,binterface.scheduler.read,binterface.protocol_audit.read,audit.read' WHERE role_code = 'VIEWER';
+UPDATE role SET permissions = 'binterface.read,binterface.fsu.read,binterface.realtime.read,binterface.alarm.read,binterface.threshold.read,binterface.ftp.read,binterface.ftp_image.read,binterface.scheduler.read,binterface.protocol_audit.read,binterface.dry_run,binterface.mock,binterface.get.run,scheduler.read,audit.read' WHERE role_code = 'OPERATOR';
+UPDATE role SET permissions = 'binterface.read,binterface.fsu.read,binterface.realtime.read,binterface.alarm.read,binterface.threshold.read,binterface.ftp.read,binterface.ftp_image.read,binterface.scheduler.read,binterface.protocol_audit.read,binterface.dry_run,binterface.mock,binterface.get.run,scheduler.read,scheduler.manage,user.read,role.read,permission.read,audit.read' WHERE role_code = 'ADMIN';

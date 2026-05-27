@@ -159,6 +159,40 @@ public class SoapMessageHandler {
     // ==================== document-style SOAP Envelope（SCService 入站） ====================
 
     /**
+     * 构造完整 document-style SOAP 响应信封（SCService 入站用），使用 Name+Code 格式 PK_Type。
+     *
+     * <p>不受 FSUService 出站 RPC adapter 影响。</p>
+     */
+    public String buildResponseWithCode(String pkType, int commandCode, String info, String xmlData) {
+        try {
+            DocumentBuilder builder = docFactory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+
+            Element envelope = doc.createElementNS(SOAP_ENVELOPE_NS, SOAP_PREFIX + ":Envelope");
+            envelope.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + SOAP_PREFIX, SOAP_ENVELOPE_NS);
+            doc.appendChild(envelope);
+
+            Element body = doc.createElementNS(SOAP_ENVELOPE_NS, SOAP_PREFIX + ":Body");
+            envelope.appendChild(body);
+
+            Document innerDoc = buildPayloadDocument(EL_RESPONSE, pkType, info, xmlData);
+            // Overwrite PK_Type with Name+Code format
+            Element innerRoot = innerDoc.getDocumentElement();
+            Element oldPk = (Element) innerRoot.getElementsByTagName("PK_Type").item(0);
+            if (oldPk != null) {
+                innerRoot.removeChild(oldPk);
+                appendPkTypeElement(innerDoc, innerRoot, pkType, commandCode);
+            }
+            Node imported = doc.importNode(innerRoot, true);
+            body.appendChild(imported);
+
+            return serialize(doc);
+        } catch (Exception e) {
+            throw new RuntimeException("SOAP 响应信封构造失败", e);
+        }
+    }
+
+    /**
      * 构造完整 document-style SOAP 响应信封（SCService 入站用）。
      *
      * <p>不受 FSUService 出站 RPC adapter 影响。</p>

@@ -105,7 +105,7 @@ public class LoginCommandHandler implements CommandHandler {
 
         CommandResult result = new CommandResult();
         result.setSuccess(true);
-        result.setResultCode("0");
+        result.setResultCode("1");
         result.setResultDesc("登录成功");
         result.setPkType(BInterfacePkType.LOGIN);
         result.setImplemented(true);

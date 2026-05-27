@@ -99,6 +99,57 @@ public class ActiveAlarmAuditScheduler {
         }
     }
 
+    /**
+     * dry-run 执行一次审计（不访问真实 FSU，使用本地快照数据）。
+     */
+    public ActiveAlarmConsistencyAuditResult runOnceDryRun(String suid) {
+        log.info("活动告警 dry-run 审计开始: fsuCode={}", suid);
+        lastRunTime = System.currentTimeMillis();
+        try {
+            ActiveAlarmConsistencyAuditResult result = auditService.auditWithProvidedSnapshot(suid, null);
+            lastResult = result;
+            lastSuccess = result.isSuccess();
+            lastError = null;
+            persistRecord(suid, result, null);
+            return result;
+        } catch (Exception e) {
+            lastSuccess = false;
+            lastError = e.getMessage();
+            log.error("dry-run 审计异常: fsuCode={}", suid, e);
+            return null;
+        }
+    }
+
+    /**
+     * 真实执行一次审计（需 realCallEnabled + allowedSuids 白名单）。
+     *
+     * @return 审计结果；如果安全门禁阻止则返回 null
+     */
+    public ActiveAlarmConsistencyAuditResult runOnceReal(String suid) {
+        if (!properties.isRealCallAllowed(suid)) {
+            log.warn("真实审计被安全门禁阻止: suid={}, realCallEnabled={}, allowedSuids={}",
+                    suid, properties.isRealCallEnabled(), properties.getAllowedSuids());
+            lastError = "真实调用被安全门禁阻止: realCallEnabled=" + properties.isRealCallEnabled();
+            return null;
+        }
+        log.info("活动告警真实审计开始: fsuCode={}", suid);
+        lastRunTime = System.currentTimeMillis();
+        try {
+            ActiveAlarmConsistencyAuditResult result = auditService.auditByQueryingFsu(suid, null);
+            lastResult = result;
+            lastSuccess = result != null && result.isSuccess();
+            lastError = null;
+            persistRecord(suid, result, null);
+            return result;
+        } catch (Exception e) {
+            lastSuccess = false;
+            lastError = e.getMessage();
+            log.error("真实审计异常: fsuCode={}", suid, e);
+            persistRecord(suid, null, e.getMessage());
+            return null;
+        }
+    }
+
     public ActiveAlarmConsistencyAuditResult getLastResult() { return lastResult; }
     public long getLastRunTime() { return lastRunTime; }
     public boolean isLastSuccess() { return lastSuccess; }

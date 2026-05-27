@@ -100,12 +100,12 @@ public class HeartbeatCommandHandler implements CommandHandler {
         Instant now = Instant.now();
         String serverTime = ISO_FORMATTER.format(now.atZone(ZoneId.systemDefault()));
 
-        String infoXml = "<ResultCode>0</ResultCode>"
+        String infoXml = "<Result>1</Result>"
                 + "<ServerTime>" + serverTime + "</ServerTime>";
 
         CommandResult result = new CommandResult();
         result.setSuccess(true);
-        result.setResultCode("0");
+        result.setResultCode("1");
         result.setResultDesc("心跳成功");
         result.setPkType(BInterfacePkType.HEARTBEAT);
         result.setImplemented(true);

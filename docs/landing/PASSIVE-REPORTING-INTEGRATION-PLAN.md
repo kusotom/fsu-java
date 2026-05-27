@@ -37,7 +37,7 @@ LANDING-006 确认真实 FSU 使用 **B接口2016 码表**。LANDING-007 使用�
 ```
 FSU (192.168.100.100)                   SC 平台 (本系统)
      │                                        │
-     ├─ LOGIN ──────────────────────────────→│ POST /api/b-interface/sc-service
+     ├─ LOGIN ──────────────────────────────→│ POST /services/SCService (或 /api/b-interface/sc-service)
      │  PK_Type: LOGIN (Code=101)            │ → SoapMessageHandler.parse()
      │  Info: FsuCode + ...                  │ → CommandDispatcher.dispatch(LOGIN)
      │                                        │ → LoginCommandHandler
@@ -62,7 +62,7 @@ FSU (192.168.100.100)                   SC 平台 (本系统)
 
 ## 5. LOGIN 处理链路
 
-- **入口**: `ScServiceController.handleScService()` (`POST /api/b-interface/sc-service`)
+- **入口**: `POST /services/SCService` 或 `POST /api/b-interface/sc-service`（两个入口均委托 ScServiceProcessor）
 - **解析**: `SoapMessageHandler.parse()` → `BInterfaceMessage` (PK_Type=LOGIN)
 - **分发**: `CommandDispatcher.dispatch()` → `LoginCommandHandler`
 - **处理**: `LoginService.login(fsuCode, remoteAddr)`
@@ -112,22 +112,28 @@ FSU (192.168.100.100)                   SC 平台 (本系统)
 - 建议: 日志输出 rejected 的 SignalID 列表供排查
 
 **SEND_ALARM**:
-- SerialNo, DeviceID: 已写入 alarm_record (serialNo, deviceId 列)
-- **SPID**: 已从 xmlData 提取但 **未写入 alarm_record** (alarm_record 表无 spid 列)
-- 建议: LANDING-001 已补强 serialNo/deviceId 列，SPID 列为后续待补
+- SerialNo: 已写入 alarm_record ✅
+- DeviceID: 已写入 alarm_record ✅
+- **SPID**: 已提取并写入 alarm_record ✅ (LANDING-008 实施阶段补齐)
+- 注意: schema SQL 尚未同步更新 spid 列，需后续补充幂等 DDL
 
-**临时策略**: 未映射的 DeviceID/SPID 记录在 `BInterfaceMessageLog` 原始报文中供事后解析 (待 BInterfaceMessageLogService 实现后)。
+**临时策略**: 未映射的 DeviceID/SPID 记录在 `BInterfaceMessageLog` 原始报文中供事后解析（BInterfaceMessageLogService 已实现）。
 
 ## 10. 原始报文保存策略
 
-**当前状态**: `BInterfaceMessageLogService` 为 **占位 TODO**，原始 SOAP 报文**未被保存**。
+**当前状态**: `BInterfaceMessageLogService` **已实现** ✅ (LANDING-008 实施阶段)。
 
-**建议策略** (下一阶段实现):
-1. 在 `ScServiceController` 入口处记录 FSU→SC 方向原始报文
+**实现策略**:
+1. 在 `ScServiceController.handleScService()` 入口处记录 FSU→SC 方向原始报文
 2. 存储到 `b_interface_message_log` 表
-3. 字段: direction="FSU→SC", command, fsuCode, messageType="Request", rawMessage
-4. 保留原始 SOAP 不修改 (用于协议分析和审计)
-5. 异步记录，不阻塞主处理链路
+3. 字段: direction="INBOUND", command (PK_Type), fsuCode (从 Info 提取), messageType="SOAP", rawMessage (完整原始 SOAP)
+4. 保留完整原始 SOAP 不修改（用于协议分析和审计）
+5. 同步保存，失败不抛异常（try-catch + log.error），不阻塞主链路 ACK
+6. 项目未启用 @Async，采用同步 safe-save 模式
+
+**待补充**: 日志清理策略 → ✅ LANDING-010 已实现（手动 DELETE /cleanup，不自动）。
+
+**查询增强**: LANDING-010 已实现分页多条件查询（GET /query?direction=&command=&fsuCode=&messageType=&page=&size=）。
 
 ## 11. 与真实点位表 / seed SQL 的关系
 

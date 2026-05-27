@@ -81,6 +81,7 @@ public class TimeCheckService {
                     .fsuCode(fsuCode)
                     .serviceUrl(effectiveServiceUrl)
                     .pkType(BInterfacePkType.TIME_CHECK)
+                    .pkTypeFormat("legacy-2016")
                     .infoXml(infoXml)
                     .build();
 

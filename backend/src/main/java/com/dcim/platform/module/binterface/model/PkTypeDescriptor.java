@@ -93,6 +93,17 @@ public class PkTypeDescriptor {
         BInterfaceCommand2024 byName = BInterfaceCommand2024.findByName(name.trim()).orElse(null);
         BInterfaceCommand2024 byCode = BInterfaceCommand2024.findByCode(code).orElse(null);
         boolean consistent = byName != null && byName == byCode;
+        // BIF2016: also validate against 2016 namespace (separate code assignments from 2024)
+        if (!consistent && name != null && code != null) {
+            String nameTrimmed = name.trim();
+            boolean in2016 = com.dcim.platform.module.binterface.compat.BInterfaceCommand2016
+                    .isDefined(nameTrimmed)
+                    && java.util.Optional.ofNullable(
+                        com.dcim.platform.module.binterface.compat.BInterfaceCommand2016
+                            .codeFor(nameTrimmed).orElse(null))
+                    .filter(c -> c.equals(code)).isPresent();
+            if (in2016) consistent = true;
+        }
         String msg = consistent ? null :
                 "Name=" + name + " 与 Code=" + code + " 不一致: "
                 + (byName != null ? "Name→" + byName.getName() : "Name未知")
