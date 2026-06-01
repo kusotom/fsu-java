@@ -1,0 +1,84 @@
+/**
+ * FE-P1-UI-001: 布局 — 页面模板、表格、筛选区、抽屉等统一样式.
+ */
+
+/* ===== 页面模板 ===== */
+.page-template {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== 指标卡片行 ===== */
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+/* ===== 表格增强 ===== */
+.data-table {
+  .el-table {
+    --el-table-header-bg-color: #F8FAFC;
+    --el-table-row-hover-bg-color: #F1F5F9;
+  }
+}
+
+/* ===== 筛选面板 ===== */
+.filter-panel {
+  background: var(--app-card-bg);
+  border-radius: var(--radius-panel);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== 详情抽屉 ===== */
+.detail-drawer {
+  .el-drawer__header {
+    border-bottom: 1px solid var(--border-light);
+    padding: 16px 20px;
+    margin-bottom: 0;
+  }
+  .el-drawer__body {
+    padding: 20px;
+  }
+}
+
+/* ===== 双栏布局 ===== */
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===== raw XML 代码区 ===== */
+.raw-xml-viewer {
+  background: #1E1E1E;
+  color: #D4D4D4;
+  border-radius: var(--radius-panel);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 60vh;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ===== 空状态 / 错误状态 ===== */
+.state-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+
+  .state-icon { font-size: 48px; margin-bottom: 12px; }
+  .state-title { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+  .state-desc { font-size: 13px; }
+}

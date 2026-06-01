@@ -1,6 +1,7 @@
 <template>
   <div>
-    <PageHeader title="站点管理" description="管理铁塔站点、机房、户外柜所属站址" />
+    <PageHeader title="站点监控" description="按站点组织机房、户外柜、FSU 绑定关系与实时数据入口" />
+    <SiteMonitorTabs />
     <SearchPanel v-model="search" @search="fetchData" @reset="resetSearch">
       <el-form-item label="编码"><el-input v-model="search.siteCode" placeholder="站点编码" clearable /></el-form-item>
       <el-form-item label="名称"><el-input v-model="search.siteName" placeholder="站点名称" clearable /></el-form-item>
@@ -38,6 +39,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@/components/PageHeader.vue'
 import SearchPanel from '@/components/SearchPanel.vue'
+import SiteMonitorTabs from '@/components/SiteMonitorTabs.vue'
 import { getSites, createSite, updateSite, deleteSite } from '@/api/resource'
 import type { Site } from '@/types'
 

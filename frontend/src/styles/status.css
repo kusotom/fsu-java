@@ -1,0 +1,31 @@
+/**
+ * FE-P1-UI-001: 状态色系统 — 统一 online/offline/alarm 等状态样式.
+ */
+
+/* ===== FSU 在线状态点 ===== */
+.fsu-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.fsu-dot--online  { background: var(--status-online); }
+.fsu-dot--offline { background: var(--status-offline); }
+.fsu-dot--alarm   { background: var(--status-alarm); }
+.fsu-dot--unknown { background: var(--status-unknown); }
+
+/* ===== 告警等级标签 ===== */
+.alarm-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.alarm-level--CRITICAL { color: var(--alarm-critical); background: #FEE2E2; }
+.alarm-level--MAJOR    { color: var(--alarm-major);    background: #FEE2E2; }
+.alarm-level--MINOR    { color: var(--alarm-minor);    background: #FFF7ED; }
+.alarm-level--WARN     { color: var(--alarm-warning);  background: #FEFCE8; }
+.alarm-level--INFO     { color: var(--alarm-info);     background: #EFF6FF; }

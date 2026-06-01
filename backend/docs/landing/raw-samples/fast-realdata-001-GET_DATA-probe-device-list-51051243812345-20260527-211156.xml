@@ -1,0 +1,24 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-device-list -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-27T21:11:56.889672251 -->
+
+=== REQUEST ===
+<FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><DeviceList><Device Id="51051241820004" Code="51051241820004">
+<Id>0118001001</Id>
+<Id>0218001001</Id>
+<Id>0318001001</Id>
+<Id>0418001001</Id>
+<Id>0118002001</Id>
+</Device>
+<Device Id="51051241830004" Code="51051241830004">
+<Id>0118001001</Id>
+<Id>0218001001</Id>
+<Id>0318001001</Id>
+<Id>0418001001</Id>
+<Id>0118002001</Id>
+</Device>
+</DeviceList>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response><PK_Type><Name>GET_DATA_ACK</Name><Code>402</Code></PK_Type><Info><FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><Result>1</Result><Values><DeviceList><Device><TSemaphore Id="x" MeasuredVal="1"/></Device></DeviceList></Values></Info></Response></soap:Body></soap:Envelope>

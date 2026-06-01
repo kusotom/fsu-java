@@ -1,0 +1,25 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type><Name>SEND_ALARM</Name><Code>501</Code></PK_Type>
+      <Info>
+        <Values>
+          <TAlarmList>
+            <TAlarm>
+              <SerialNo>0000000001</SerialNo>
+              <Id>0118001001</Id>
+              <FsuId>51051243812345</FsuId>
+              <FsuCode>51051243812345</FsuCode>
+              <DeviceId>51051241820004</DeviceId>
+              <DeviceCode>51051241820004</DeviceCode>
+              <AlarmTime>2026-05-26 10:00:00</AlarmTime>
+              <AlarmLevel>2</AlarmLevel>
+              <AlarmFlag>1</AlarmFlag>
+              <AlarmDesc>temperature alarm</AlarmDesc>
+            </TAlarm>
+          </TAlarmList>
+        </Values>
+      </Info>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

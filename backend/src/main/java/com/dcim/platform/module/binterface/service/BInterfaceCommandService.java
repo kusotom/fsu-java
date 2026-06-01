@@ -2,6 +2,7 @@ package com.dcim.platform.module.binterface.service;
 
 import com.dcim.platform.module.binterface.entity.BInterfaceCommandEntity;
 import com.dcim.platform.module.binterface.repository.BInterfaceCommandRepository;
+import com.dcim.platform.common.security.DataScopeService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
 public class BInterfaceCommandService {
 
     private final BInterfaceCommandRepository repository;
-
+    
     public BInterfaceCommandService(BInterfaceCommandRepository repository) {
         this.repository = repository;
     }

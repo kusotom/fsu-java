@@ -1,0 +1,20 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_LOGININFO_ACK</Name>
+        <Code>1502</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <IPSecUser></IPSecUser>
+        <IPSecPWD></IPSecPWD>
+        <IPSecIP></IPSecIP>
+        <SCIP>192.168.100.123</SCIP>
+        <DeviceList>
+            <Device Id="51051241820004" Code="51051241820004"/>
+            <Device Id="51051241830004" Code="51051241830004"/>
+            <Device Id="51051241840004" Code="51051241840004"/>
+            <Device Id="51051240700002" Code="51051240700002"/>
+        </DeviceList>
+    </Info>
+</Response></soap:Body></soap:Envelope>

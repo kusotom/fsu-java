@@ -1,0 +1,55 @@
+/**
+ * FE-P1-UI-001: Element Plus 主题覆盖 — 动力环境监控平台.
+ * tokens.css 已在 main.ts 中全局导入, CSS 变量直接可用.
+ */
+
+:root {
+  // Element Plus 主色覆盖
+  --el-color-primary: var(--app-primary);
+  --el-color-primary-light-3: var(--app-primary-light);
+  --el-color-primary-dark-2: var(--app-primary-hover);
+
+  // 侧边栏菜单覆盖
+  --el-menu-bg-color: var(--app-sidebar-bg);
+  --el-menu-text-color: var(--app-sidebar-text);
+  --el-menu-active-color: var(--app-sidebar-text-active);
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.06);
+
+  // 卡片
+  --el-card-bg-color: var(--app-card-bg);
+  --el-card-border-radius: var(--radius-card);
+}
+
+// ===== 全局布局 =====
+.app-container {
+  background: var(--app-bg);
+  min-height: 100vh;
+}
+
+.app-content {
+  padding: 20px;
+}
+
+// ===== 卡片 =====
+.app-card {
+  background: var(--app-card-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+// ===== 协议诊断页面视觉隔离 =====
+.protocol-page {
+  border-left: 4px solid var(--status-protocol);
+}
+
+.protocol-banner {
+  background: linear-gradient(135deg, #FEF9C3, #FEF08A);
+  border: 1px solid var(--status-protocol);
+  border-radius: var(--radius-panel);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #854D0E;
+}

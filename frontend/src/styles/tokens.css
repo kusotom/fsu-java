@@ -1,0 +1,59 @@
+/**
+ * FE-P1-UI-001: 设计 token — 动力环境监控平台视觉基础.
+ * 所有页面和组件必须优先使用这些 token，禁止在页面里硬编码颜色.
+ */
+
+:root {
+  // ===== 主色 =====
+  --app-primary: #1A5FDC;
+  --app-primary-hover: #1554C0;
+  --app-primary-light: #EAF2FF;
+
+  // ===== 侧边栏 =====
+  --app-sidebar-bg: #1B2A47;
+  --app-sidebar-active: #1A5FDC;
+  --app-sidebar-text: #D6E1F2;
+  --app-sidebar-text-active: #FFFFFF;
+
+  // ===== 背景 =====
+  --app-bg: #F5F7FA;
+  --app-card-bg: #FFFFFF;
+  --app-header-bg: #FFFFFF;
+
+  // ===== 状态色 =====
+  --status-online: #16A34A;
+  --status-offline: #F59E0B;
+  --status-alarm: #DC2626;
+  --status-warning: #F97316;
+  --status-unknown: #64748B;
+  --status-protocol: #EAB308;
+  --status-info: #2563EB;
+  --status-muted: #94A3B8;
+
+  // ===== 告警等级 =====
+  --alarm-critical: #B91C1C;
+  --alarm-major: #DC2626;
+  --alarm-minor: #F97316;
+  --alarm-warning: #FACC15;
+  --alarm-info: #2563EB;
+
+  // ===== 文字 =====
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #94A3B8;
+
+  // ===== 边框 =====
+  --border-light: #E5E7EB;
+  --border-normal: #D1D5DB;
+
+  // ===== 圆角 =====
+  --radius-card: 10px;
+  --radius-panel: 8px;
+
+  // ===== 阴影 =====
+  --shadow-card: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-drawer: -4px 0 16px rgba(15, 23, 42, 0.08);
+
+  // ===== 字号 =====
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

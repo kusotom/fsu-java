@@ -51,7 +51,7 @@ class SendAlarmCommandHandlerTest {
         CommandResult result = handler.handle(contextWithFsuCode("FSU-001", null));
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode());
         assertEquals(BInterfacePkType.SEND_ALARM, result.getPkType());
         assertTrue(result.isImplemented());
     }
@@ -65,7 +65,7 @@ class SendAlarmCommandHandlerTest {
 
         String infoXml = result.toInfoXml();
         assertNotNull(infoXml);
-        assertTrue(infoXml.contains("<ResultCode>0</ResultCode>"));
+        assertTrue(infoXml.contains("<Result>1</Result>"));
         assertTrue(infoXml.contains("<AlarmID>42</AlarmID>"));
     }
 

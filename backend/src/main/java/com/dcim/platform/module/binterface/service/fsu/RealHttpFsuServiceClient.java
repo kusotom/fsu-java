@@ -143,10 +143,13 @@ public class RealHttpFsuServiceClient implements FsuServiceClient {
                 }
             }
 
-            // 2. RPC 封装
+            // 2. RPC 封装 (BIF2016-RPCXML-001: escaped xmlData text + soap prefix)
             String rpcSoapRequest = rpcAdapter.wrapRequestPayload(requestPayload);
 
+
             // 3. HTTP POST
+            // If the FSU still times out, the SOAP prefix/namespace might differ from
+            // what the Emerson FSU expects. The proxy path is known to work (curl -x verified).
             String rpcSoapResponse = doHttpPost(request.getServiceUrl(), rpcSoapRequest);
 
             // 4. RPC 解包 → document-style SOAP

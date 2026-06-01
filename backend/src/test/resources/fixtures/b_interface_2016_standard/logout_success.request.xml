@@ -1,0 +1,11 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type><Name>LOGOUT</Name><Code>103</Code></PK_Type>
+      <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+      </Info>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

@@ -1,0 +1,24 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_FSUINFO -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T13:48:56.495465284 -->
+
+=== REQUEST ===
+<FSUCode>51051243812345</FSUCode>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_FSUINFO_ACK</Name>
+        <Code>1702</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <TFSUStatus>
+            <CPUUsage>25.33</CPUUsage>
+            <MEMUsage>49.05</MEMUsage>
+        </TFSUStatus>
+        <Result>0</Result>
+    </Info>
+</Response></soap:Body></soap:Envelope>

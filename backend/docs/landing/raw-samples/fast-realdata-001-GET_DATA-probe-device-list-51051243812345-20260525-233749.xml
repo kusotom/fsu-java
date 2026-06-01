@@ -1,0 +1,167 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-device-list -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T23:37:49.559484192 -->
+
+=== REQUEST ===
+<FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><DeviceList><Device Id="51051241820004" Code="51051241820004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+<TSemaphore Id="0218002001" Code="0218002001"/>
+<TSemaphore Id="0318002001" Code="0318002001"/>
+<TSemaphore Id="0418002001" Code="0418002001"/>
+<TSemaphore Id="0118003001" Code="0118003001"/>
+<TSemaphore Id="0218003001" Code="0218003001"/>
+<TSemaphore Id="0318003001" Code="0318003001"/>
+<TSemaphore Id="0418003001" Code="0418003001"/>
+<TSemaphore Id="0118004001" Code="0118004001"/>
+<TSemaphore Id="0218004001" Code="0218004001"/>
+<TSemaphore Id="0318004001" Code="0318004001"/>
+<TSemaphore Id="0418004001" Code="0418004001"/>
+<TSemaphore Id="0118005001" Code="0118005001"/>
+<TSemaphore Id="0218005001" Code="0218005001"/>
+<TSemaphore Id="0318005001" Code="0318005001"/>
+<TSemaphore Id="0418005001" Code="0418005001"/>
+<TSemaphore Id="0118006001" Code="0118006001"/>
+<TSemaphore Id="0218006001" Code="0218006001"/>
+<TSemaphore Id="0318006001" Code="0318006001"/>
+<TSemaphore Id="0418006001" Code="0418006001"/>
+<TSemaphore Id="0118007001" Code="0118007001"/>
+<TSemaphore Id="0218007001" Code="0218007001"/>
+<TSemaphore Id="0318007001" Code="0318007001"/>
+<TSemaphore Id="0418007001" Code="0418007001"/>
+<TSemaphore Id="0118008001" Code="0118008001"/>
+<TSemaphore Id="0218008001" Code="0218008001"/>
+</Device>
+<Device Id="51051241830004" Code="51051241830004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+<TSemaphore Id="0218002001" Code="0218002001"/>
+<TSemaphore Id="0318002001" Code="0318002001"/>
+<TSemaphore Id="0418002001" Code="0418002001"/>
+<TSemaphore Id="0118003001" Code="0118003001"/>
+<TSemaphore Id="0218003001" Code="0218003001"/>
+<TSemaphore Id="0318003001" Code="0318003001"/>
+<TSemaphore Id="0418003001" Code="0418003001"/>
+<TSemaphore Id="0118004001" Code="0118004001"/>
+<TSemaphore Id="0218004001" Code="0218004001"/>
+<TSemaphore Id="0318004001" Code="0318004001"/>
+<TSemaphore Id="0418004001" Code="0418004001"/>
+<TSemaphore Id="0118005001" Code="0118005001"/>
+<TSemaphore Id="0218005001" Code="0218005001"/>
+<TSemaphore Id="0318005001" Code="0318005001"/>
+<TSemaphore Id="0418005001" Code="0418005001"/>
+<TSemaphore Id="0118006001" Code="0118006001"/>
+<TSemaphore Id="0218006001" Code="0218006001"/>
+<TSemaphore Id="0318006001" Code="0318006001"/>
+<TSemaphore Id="0418006001" Code="0418006001"/>
+<TSemaphore Id="0118007001" Code="0118007001"/>
+<TSemaphore Id="0218007001" Code="0218007001"/>
+<TSemaphore Id="0318007001" Code="0318007001"/>
+<TSemaphore Id="0418007001" Code="0418007001"/>
+<TSemaphore Id="0118008001" Code="0118008001"/>
+<TSemaphore Id="0218008001" Code="0218008001"/>
+</Device>
+<Device Id="51051241840004" Code="51051241840004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+<TSemaphore Id="0218002001" Code="0218002001"/>
+<TSemaphore Id="0318002001" Code="0318002001"/>
+<TSemaphore Id="0418002001" Code="0418002001"/>
+<TSemaphore Id="0118003001" Code="0118003001"/>
+<TSemaphore Id="0218003001" Code="0218003001"/>
+<TSemaphore Id="0318003001" Code="0318003001"/>
+<TSemaphore Id="0418003001" Code="0418003001"/>
+<TSemaphore Id="0118004001" Code="0118004001"/>
+<TSemaphore Id="0218004001" Code="0218004001"/>
+<TSemaphore Id="0318004001" Code="0318004001"/>
+<TSemaphore Id="0418004001" Code="0418004001"/>
+<TSemaphore Id="0118005001" Code="0118005001"/>
+<TSemaphore Id="0218005001" Code="0218005001"/>
+<TSemaphore Id="0318005001" Code="0318005001"/>
+<TSemaphore Id="0418005001" Code="0418005001"/>
+<TSemaphore Id="0118006001" Code="0118006001"/>
+<TSemaphore Id="0218006001" Code="0218006001"/>
+<TSemaphore Id="0318006001" Code="0318006001"/>
+<TSemaphore Id="0418006001" Code="0418006001"/>
+<TSemaphore Id="0118007001" Code="0118007001"/>
+<TSemaphore Id="0218007001" Code="0218007001"/>
+<TSemaphore Id="0318007001" Code="0318007001"/>
+<TSemaphore Id="0418007001" Code="0418007001"/>
+<TSemaphore Id="0118008001" Code="0118008001"/>
+<TSemaphore Id="0218008001" Code="0218008001"/>
+</Device>
+<Device Id="51051240700002" Code="51051240700002">
+<TSemaphore Id="0107001001" Code="0107001001"/>
+<TSemaphore Id="0207001001" Code="0207001001"/>
+<TSemaphore Id="0307001001" Code="0307001001"/>
+<TSemaphore Id="0407001001" Code="0407001001"/>
+<TSemaphore Id="0107002001" Code="0107002001"/>
+<TSemaphore Id="0207002001" Code="0207002001"/>
+<TSemaphore Id="0307002001" Code="0307002001"/>
+<TSemaphore Id="0407002001" Code="0407002001"/>
+<TSemaphore Id="0107005001" Code="0107005001"/>
+<TSemaphore Id="0207005001" Code="0207005001"/>
+<TSemaphore Id="0307005001" Code="0307005001"/>
+<TSemaphore Id="0407005001" Code="0407005001"/>
+<TSemaphore Id="0107102001" Code="0107102001"/>
+<TSemaphore Id="0207102001" Code="0207102001"/>
+<TSemaphore Id="0307102001" Code="0307102001"/>
+<TSemaphore Id="0407102001" Code="0407102001"/>
+<TSemaphore Id="0107104001" Code="0107104001"/>
+<TSemaphore Id="0207104001" Code="0207104001"/>
+<TSemaphore Id="0307104001" Code="0307104001"/>
+<TSemaphore Id="0407104001" Code="0407104001"/>
+<TSemaphore Id="0107106001" Code="0107106001"/>
+<TSemaphore Id="0207106001" Code="0207106001"/>
+<TSemaphore Id="0307106001" Code="0307106001"/>
+<TSemaphore Id="0407106001" Code="0407106001"/>
+<TSemaphore Id="0107107001" Code="0107107001"/>
+<TSemaphore Id="0207107001" Code="0207107001"/>
+<TSemaphore Id="0307107001" Code="0307107001"/>
+<TSemaphore Id="0407107001" Code="0407107001"/>
+</Device>
+<Device Id="51051243812345" Code="51051243812345">
+<TSemaphore Id="0138101001" Code="0138101001"/>
+<TSemaphore Id="0238101001" Code="0238101001"/>
+<TSemaphore Id="0338101001" Code="0338101001"/>
+<TSemaphore Id="0438101001" Code="0438101001"/>
+<TSemaphore Id="0138102001" Code="0138102001"/>
+<TSemaphore Id="0238102001" Code="0238102001"/>
+<TSemaphore Id="0338102001" Code="0338102001"/>
+<TSemaphore Id="0438102001" Code="0438102001"/>
+<TSemaphore Id="0138103001" Code="0138103001"/>
+<TSemaphore Id="0238103001" Code="0238103001"/>
+<TSemaphore Id="0338103001" Code="0338103001"/>
+<TSemaphore Id="0438103001" Code="0438103001"/>
+<TSemaphore Id="0138201001" Code="0138201001"/>
+<TSemaphore Id="0238201001" Code="0238201001"/>
+<TSemaphore Id="0338201001" Code="0338201001"/>
+<TSemaphore Id="0438201001" Code="0438201001"/>
+</Device>
+</DeviceList>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_DATA_ACK</Name>
+        <Code>402</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <Values>
+            <DeviceList/>
+        </Values>
+    </Info>
+</Response></soap:Body></soap:Envelope>

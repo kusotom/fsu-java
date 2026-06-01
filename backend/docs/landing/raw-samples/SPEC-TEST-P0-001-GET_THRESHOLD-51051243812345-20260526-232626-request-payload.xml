@@ -1,0 +1,15 @@
+<Request>
+  <PK_Type>
+    <Name>GET_THRESHOLD</Name>
+    <Code>1901</Code>
+  </PK_Type>
+  <Info>
+    <FsuId>51051243812345</FsuId>
+    <FsuCode>51051243812345</FsuCode>
+    <DeviceList>
+      <Device Code="51051241820004" Id="51051241820004">
+        <Id>0118001001</Id>
+      </Device>
+    </DeviceList>
+  </Info>
+</Request>

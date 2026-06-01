@@ -1,0 +1,31 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_DATA_ACK</Name>
+        <Code>402</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <Values>
+            <DeviceList>
+                <Device Id="51051241820004" Code="51051241820004">
+                    <TSemaphore Type="2" Id="0418002001" MeasuredVal="0" SetupVal="0" Status="0"/>
+                </Device>
+                <Device Id="51051241830004" Code="51051241830004">
+                    <TSemaphore Type="2" Id="0418004001" MeasuredVal="0" SetupVal="0" Status="0"/>
+                    <TSemaphore Type="2" Id="0418007001" MeasuredVal="0" SetupVal="0" Status="0"/>
+                    <TSemaphore Type="3" Id="0418101001" MeasuredVal="0.0" SetupVal="0" Status="0"/>
+                    <TSemaphore Type="3" Id="0418102001" MeasuredVal="0.0" SetupVal="0" Status="0"/>
+                </Device>
+                <Device Id="51051241840004" Code="51051241840004">
+                    <TSemaphore Type="2" Id="0418001001" MeasuredVal="0" SetupVal="0" Status="0"/>
+                </Device>
+                <Device Id="51051240700002" Code="51051240700002">
+                    <TSemaphore Type="3" Id="0407102001" MeasuredVal="0.0" SetupVal="0" Status="0"/>
+                    <TSemaphore Type="3" Id="0407107001" MeasuredVal="0.0" SetupVal="0" Status="0"/>
+                </Device>
+            </DeviceList>
+        </Values>
+    </Info>
+</Response></soap:Body></soap:Envelope>

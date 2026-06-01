@@ -2,6 +2,7 @@ package com.dcim.platform.module.resource.service;
 
 import com.dcim.platform.module.resource.entity.CabinetEntity;
 import com.dcim.platform.module.resource.repository.CabinetRepository;
+import com.dcim.platform.common.security.DataScopeService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,17 +10,33 @@ import java.util.List;
 public class CabinetService {
 
     private final CabinetRepository repository;
+    private final DataScopeService dataScopeService;
 
-    public CabinetService(CabinetRepository repository) {
+    public CabinetService(CabinetRepository repository, DataScopeService dataScopeService) {
         this.repository = repository;
+        this.dataScopeService = dataScopeService;
     }
 
     public List<CabinetEntity> list() {
-        return repository.findAll();
+        List<CabinetEntity> all = repository.findAll();
+        return dataScopeService.filterByStationScope(all, CabinetEntity::getSiteId);
     }
 
     public CabinetEntity getById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new RuntimeException("Cabinet not found: " + id));
+        CabinetEntity entity = repository.findById(id).orElseThrow(() -> new RuntimeException("CabinetEntity not found: " + id));
+        checkScopeForEntity(entity, "stationId", "CabinetEntity");
+        return entity;
+    }
+
+    private void checkScopeForEntity(CabinetEntity entity, String scopeType, String entityName) {
+        com.dcim.platform.common.security.RequestContext ctx = com.dcim.platform.common.security.RequestContext.getCurrent();
+        if (ctx == null || ctx.isAdminLike()) return;
+
+        Long stationId = entity.getSiteId();
+        if (stationId != null && !ctx.getStationScope().isEmpty() && !ctx.getStationScope().contains(stationId)) {
+            throw new com.dcim.platform.common.exception.ForbiddenException(
+                "无权访问此" + entityName + ": stationId=" + stationId, "site:view");
+        }
     }
 
     public CabinetEntity create(CabinetEntity entity) {

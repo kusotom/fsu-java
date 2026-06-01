@@ -43,7 +43,7 @@ class HeartbeatCommandHandlerTest {
         CommandResult result = handler.handle(ctx);
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode());
         assertEquals(BInterfacePkType.HEARTBEAT, result.getPkType());
         assertTrue(result.isImplemented());
         assertTrue(loginService.lastSeenUpdated);
@@ -67,7 +67,7 @@ class HeartbeatCommandHandlerTest {
 
         String infoXml = result.toInfoXml();
         assertNotNull(infoXml);
-        assertTrue(infoXml.contains("<ResultCode>0</ResultCode>"));
+        assertTrue(infoXml.contains("<Result>1</Result>"));
         assertTrue(infoXml.contains("<ServerTime>"));
     }
 

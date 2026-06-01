@@ -1,0 +1,65 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://FSUService.chinatowercom.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Body>
+    <ns1:invoke>
+      <xmlData xsi:type="SOAP-ENC:string">
+        <Request>
+            
+          <PK_Type>
+                
+            <Name>GET_DATA</Name>
+                
+            <Code>401</Code>
+              
+          </PK_Type>
+            
+          <Info>
+                
+            <FsuId>51051243812345</FsuId>
+                
+            <FsuCode>51051243812345</FsuCode>
+                
+            <DeviceList>
+                    
+              <Device Code="51051241820004" Id="51051241820004">
+                        
+                <Id>418002001</Id>
+                      
+              </Device>
+                    
+              <Device Code="51051241830004" Id="51051241830004">
+                        
+                <Id>418004001</Id>
+                        
+                <Id>418007001</Id>
+                        
+                <Id>418101001</Id>
+                        
+                <Id>418102001</Id>
+                      
+              </Device>
+                    
+              <Device Code="51051241840004" Id="51051241840004">
+                        
+                <Id>418001001</Id>
+                      
+              </Device>
+                    
+              <Device Code="51051240700002" Id="51051240700002">
+                        
+                <Id>407102001</Id>
+                        
+                <Id>407103001</Id>
+                        
+                <Id>407107001</Id>
+                      
+              </Device>
+                  
+            </DeviceList>
+              
+          </Info>
+          
+        </Request>
+      </xmlData>
+    </ns1:invoke>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

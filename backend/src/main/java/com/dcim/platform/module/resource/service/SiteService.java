@@ -2,6 +2,7 @@ package com.dcim.platform.module.resource.service;
 
 import com.dcim.platform.module.resource.entity.SiteEntity;
 import com.dcim.platform.module.resource.repository.SiteRepository;
+import com.dcim.platform.common.security.DataScopeService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,13 +10,16 @@ import java.util.List;
 public class SiteService {
 
     private final SiteRepository repository;
+    private final DataScopeService dataScopeService;
 
-    public SiteService(SiteRepository repository) {
+    public SiteService(SiteRepository repository, DataScopeService dataScopeService) {
         this.repository = repository;
+        this.dataScopeService = dataScopeService;
     }
 
     public List<SiteEntity> list() {
-        return repository.findAll();
+        List<SiteEntity> all = repository.findAll();
+        return dataScopeService.filterByStationScope(all, SiteEntity::getId);
     }
 
     public SiteEntity getById(Long id) {

@@ -31,7 +31,7 @@ class BInterface2016SetCommandSafetyTest {
 
     @Test
     void defaultSafetyGateShouldRejectEvery2016SetCommandRealExecution() {
-        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties());
+        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties(), null);
 
         assertAll(SET_COMMANDS.stream().map(spec -> () -> {
             SetCommandSafetyDecision d = gate.evaluate(spec.name(), FSU_CODE,
@@ -44,7 +44,7 @@ class BInterface2016SetCommandSafetyTest {
 
     @Test
     void every2016SetCommandShouldBeRecognizedByTheSafetyGate() {
-        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties());
+        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties(), null);
 
         assertAll(SET_COMMANDS.stream().map(spec -> () -> {
             SetCommandSafetyDecision d = gate.evaluate(spec.name(), FSU_CODE,
@@ -56,7 +56,7 @@ class BInterface2016SetCommandSafetyTest {
 
     @Test
     void all2016SetCommandsShouldBeMarkedHighRisk() {
-        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties());
+        SetCommandSafetyGate gate = new SetCommandSafetyGate(new SetCommandSafetyProperties(), null);
 
         assertAll(SET_COMMANDS.stream().map(spec -> () -> {
             SetCommandSafetyDecision d = gate.evaluate(spec.name(), FSU_CODE,
@@ -68,7 +68,7 @@ class BInterface2016SetCommandSafetyTest {
     @Test
     void schedulerTriggeredSetCommandShouldBeRejectedEvenWhenDryRunIsEnabled() {
         SetCommandSafetyProperties props = enabledDryRunProperties();
-        SetCommandSafetyGate gate = new SetCommandSafetyGate(props);
+        SetCommandSafetyGate gate = new SetCommandSafetyGate(props, null);
 
         for (String command : new String[]{"SET_POINT", "SET_THRESHOLD", "SET_FTP", "SET_FSUREBOOT"}) {
             SetCommandSafetyDecision d = gate.evaluate(command, FSU_CODE,

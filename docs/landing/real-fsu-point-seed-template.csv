@@ -1,0 +1,25 @@
+# TASK-001: 真实 FSU 点位 Seed 模板
+# FSUID=51051243812345, StationName=1
+# 请管理方填写后导入为 monitoring_point
+# 字段对齐: FsuDeviceEntity.fsuCode + MonitoringPointEntity.pointCode/pointName/pointType/dataType/unit
+fsuCode,deviceId,spid,signalId,signalName,signalType,dataType,unit,writable,alarmUpper,alarmLower,alarmUpperUrgent,alarmLowerUrgent,remark
+51051243812345,51051241820004,,,,,,,,,,,,
+51051243812345,51051241830004,,,,,,,,,,,,
+51051243812345,51051241840004,,,,,,,,,,,,
+51051243812345,51051240700002,,,,,,,,,,,,
+51051243812345,51051243812345,,,,,,,,,,,,
+# 字段说明:
+#   fsuCode      = FSU编码 (51051243812345)
+#   deviceId     = 设备ID (已知5个, 从GET_LOGININFO获取)
+#   spid         = 标准监控点ID (需管理方提供)
+#   signalId     = 信号量ID (可同spid)
+#   signalName   = 监控点名称 (如"温度1"/"湿度1")
+#   signalType   = 监控点类型 (AI=模拟量输入 / DI=数字量输入 / DO=数字量输出)
+#   dataType     = 数据类型 (float/int/string)
+#   unit         = 单位 (如℃/%RH/V)
+#   writable     = 是否可写 (true/false)
+#   alarmUpper   = 告警上限
+#   alarmLower   = 告警下限
+#   alarmUpperUrgent = 严重告警上限
+#   alarmLowerUrgent = 严重告警下限
+#   remark       = 备注

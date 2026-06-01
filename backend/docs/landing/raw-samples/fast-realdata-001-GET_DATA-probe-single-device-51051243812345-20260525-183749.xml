@@ -1,0 +1,13 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-single-device -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T18:37:49.345484977 -->
+
+=== REQUEST ===
+<FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><DeviceList><Device Id="51051241820004" Code="51051241820004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+</Device>
+</DeviceList>
+
+=== RESPONSE ===
+(null)

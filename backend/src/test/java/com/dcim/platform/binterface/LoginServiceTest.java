@@ -55,7 +55,7 @@ class LoginServiceTest {
         LoginResult result = loginService.login("FSU-001", "192.168.1.100");
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
         assertEquals("FSU-001", result.getFsuCode());
         assertNotNull(result.getSessionId());
         assertTrue(result.getSessionId().startsWith("SESSION-FSU-001-"));
@@ -88,13 +88,17 @@ class LoginServiceTest {
     // ==================== 重复登录 ====================
 
     @Test
-    void shouldUpdateSessionOnRepeatedLogin() {
+    void shouldMarkDuplicateWithin120s() {
         LoginResult first = loginService.login("FSU-001", null);
         LoginResult second = loginService.login("FSU-001", null);
 
         assertTrue(second.isSuccess());
-        // 两次登录生成不同的 SessionID
-        assertNotEquals(first.getSessionId(), second.getSessionId());
+        assertTrue(second.isDuplicateWithin120s(),
+                "Repeat login within 120s must be marked duplicate");
+        assertEquals("ACCEPTED_DUPLICATE", second.getRegisterDecision());
+        assertTrue(second.getRegisterIntervalSeconds() < 120);
+        // Same session reused for duplicate
+        assertEquals(first.getSessionId(), second.getSessionId());
     }
 
     // ==================== 缺少 FSUCode ====================

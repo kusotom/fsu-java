@@ -3,6 +3,9 @@ package com.dcim.platform.binterface;
 import com.dcim.platform.module.binterface.service.SendDataResult;
 import com.dcim.platform.module.binterface.service.SendDataService;
 import com.dcim.platform.module.binterface.xml.XmlDataModel;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingResult;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingService;
+import com.dcim.platform.module.mapping.service.UnmappedSignalObservationService;
 import com.dcim.platform.module.resource.entity.FsuDeviceEntity;
 import com.dcim.platform.module.resource.entity.MonitoringPointEntity;
 import com.dcim.platform.module.resource.repository.FsuDeviceRepository;
@@ -17,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * SendDataService 单元测试。
@@ -198,6 +202,25 @@ class SendDataServiceTest {
 
         assertFalse(result.getErrors().isEmpty());
         assertTrue(result.getErrors().stream().anyMatch(e -> e.contains("UNKNOWN-001")));
+    }
+
+    @Test
+    void shouldNotRecordObservationWhenStandard2016SignalIsMappedCandidateButPointNotBound() {
+        monitoringPointRepo.deleteAll();
+        EStoneIIMappingService mappingService = mock(EStoneIIMappingService.class);
+        UnmappedSignalObservationService unmappedService = mock(UnmappedSignalObservationService.class);
+        when(mappingService.resolveRealtime(eq(FSU_CODE), isNull(), isNull(),
+                eq("0407107001"), eq("0407107001"), eq("0.0000")))
+                .thenReturn(standardCandidate("0407107001", "后半组电压", "", "0.0000"));
+        SendDataService serviceWithMapping = new SendDataService(
+                fsuDeviceRepo, monitoringPointRepo, realtimeDataRepo, mappingService, unmappedService);
+
+        XmlDataModel xmlData = createXmlDataWithSignals(signal("0407107001", "0.0000"));
+        SendDataResult result = serviceWithMapping.processData(FSU_CODE, null, xmlData);
+
+        assertFalse(result.isSuccess());
+        verify(unmappedService, never()).record(any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any());
     }
 
     // ==================== 全量失败 ====================
@@ -510,5 +533,14 @@ class SendDataServiceTest {
         }
 
         @Override public List<RealtimeDataEntity> findByFsuId(Long fsuId) { return List.of(); }
+    }
+
+    private static EStoneIIMappingResult standardCandidate(String signalId, String signalName,
+                                                           String unit, String value) {
+        return new EStoneIIMappingResult(FSU_CODE, null, null, null,
+                signalId, signalId, signalName, unit, value, null,
+                "AI/模拟量", "AI", null, null, null, null,
+                "MAPPED_CANDIDATE", "LOW", "BINTERFACE_2016_STANDARD",
+                true, false, false, "BINTERFACE_2016_STANDARD", null);
     }
 }

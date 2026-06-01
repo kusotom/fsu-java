@@ -46,14 +46,14 @@ class LoginCommandHandlerTest {
         CommandResult result = handler.handle(ctx);
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
         assertEquals(BInterfacePkType.LOGIN, result.getPkType());
         assertTrue(result.isImplemented());
 
         // 验证响应 Info 包含必要字段
         String infoXml = result.toInfoXml();
         assertNotNull(infoXml);
-        assertTrue(infoXml.contains("<ResultCode>0</ResultCode>"));
+        assertTrue(infoXml.contains("<Result>1</Result>"), "B接口2016 uses Result not ResultCode");
         assertTrue(infoXml.contains("<SessionID>"));
         assertTrue(infoXml.contains("<ExpireSeconds>"));
         assertTrue(infoXml.contains("<ServerTime>"));

@@ -1,0 +1,9 @@
+<Request>
+  <PK_Type>
+    <Name>GET_LOGININFO</Name>
+    <Code>1501</Code>
+  </PK_Type>
+  <Info>
+    <FSUCode>51051243812345</FSUCode>
+  </Info>
+</Request>
