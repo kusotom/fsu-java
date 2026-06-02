@@ -1,13 +1,13 @@
 <template>
   <div>
-    <PageHeader :title="`FSU ${fsuCode}`" description="FSU 详情 — 基础信息、运行状态、设备、点位与通信记录" />
+    <PageHeader :title="`FSU ${fsuCode}`" description="FSU 详情 — 基础信息、运行状态、采集设备与通信记录" />
     <DataStateAlert v-if="dataState !== 'normal'" :state="dataState" />
 
     <!-- ===== 指标卡片 ===== -->
     <div class="metric-row" style="margin-bottom: 16px">
       <MetricCard title="在线状态" :value="status?.onlineStatus || '-'" :status="onlineStatusClass" :loading="loading" />
       <MetricCard title="心跳丢失" :value="status?.heartbeatMissCount ?? 0" unit="次" :status="(status?.heartbeatMissCount || 0) > 3 ? 'danger' : 'normal'" :loading="loading" />
-      <MetricCard title="设备数" :value="deviceIds.length" status="info" :loading="loading" />
+      <MetricCard title="采集设备" :value="deviceIds.length" status="info" :loading="loading" />
     </div>
 
     <!-- ===== Tabs ===== -->
@@ -55,17 +55,30 @@
     <div v-if="activeTab === 'devices'">
       <EmptyState v-if="deviceIds.length === 0" type="empty" title="暂无设备列表" description="GET_LOGININFO 或 LOGIN 后可发现下挂设备" />
       <div v-else class="app-card data-table" style="padding: 0; overflow: hidden">
-        <el-table :data="deviceIds" size="small" stripe>
-          <el-table-column prop="deviceId" label="Device ID" width="200" />
-          <el-table-column prop="source" label="来源" width="150" />
-          <el-table-column prop="deviceCode" label="Device Code" width="180" />
-          <el-table-column label="映射状态" width="120">
+        <el-table :data="displayDevices" size="small" stripe>
+          <el-table-column prop="displayDevice" label="采集设备" min-width="180" />
+          <el-table-column label="业务状态" width="160">
             <template #default="scope">
-              <StatusBadge :status="mappingStatusType(scope.row.mappingStatus)" :label="mappingStatusLabel(scope.row.mappingStatus)" />
+              <StatusBadge :status="scope.row.businessStatus" :label="scope.row.businessStateLabel" />
             </template>
           </el-table-column>
+          <el-table-column prop="displayLastSeenAt" label="最近发现" width="160" />
         </el-table>
       </div>
+      <el-collapse v-if="displayDevices.length > 0" style="margin-top: 12px">
+        <el-collapse-item title="技术信息" name="tech">
+          <el-table :data="displayDevices" size="small" stripe>
+            <el-table-column prop="deviceId" label="DeviceID" width="200" />
+            <el-table-column prop="deviceCode" label="DeviceCode" width="180" />
+            <el-table-column prop="source" label="来源" width="160" />
+            <el-table-column label="映射状态" width="150">
+              <template #default="scope">
+                <StatusBadge :status="mappingStatusType(scope.row.mappingStatus)" :label="mappingStatusLabel(scope.row.mappingStatus)" />
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-collapse-item>
+      </el-collapse>
     </div>
 
     <!-- ===== 通信记录 ===== -->
@@ -107,6 +120,7 @@ import {
   mappingStatusBadgeStatus as mappingStatusType,
   mappingStatusLabel,
 } from '@/utils/mappingStatus'
+import { normalizeFsuDevice } from '@/utils/monitorAdapters'
 
 const route = useRoute()
 const fsuCode = computed(() => route.params.fsuCode as string || '')
@@ -129,6 +143,7 @@ const onlineStatusClass = computed(() => {
   if (s === 'OFFLINE') return 'warning'
   return 'muted'
 })
+const displayDevices = computed(() => deviceIds.value.map(row => normalizeFsuDevice(row)))
 
 async function fetchStatus() {
   loading.value = true; dataState.value = 'normal'

@@ -1,75 +1,273 @@
 /**
- * FE-P1-UI-001: 布局 — 页面模板、表格、筛选区、抽屉等统一样式.
+ * FE-UI-STYLE-REFIT-P1-001: 页面布局、表格、筛选区与业务卡片统一样式.
  */
 
-/* ===== 页面模板 ===== */
 .page-template {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* ===== 指标卡片行 ===== */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-header__title {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.page-header__description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.page-header__extra {
+  flex-shrink: 0;
+}
+
 .metric-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
 }
 
-/* ===== 表格增强 ===== */
-.data-table {
-  .el-table {
-    --el-table-header-bg-color: #F8FAFC;
-    --el-table-row-hover-bg-color: #F1F5F9;
-  }
-}
-
-/* ===== 筛选面板 ===== */
 .filter-panel {
-  background: var(--app-card-bg);
-  border-radius: var(--radius-panel);
-  padding: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
-/* ===== 详情抽屉 ===== */
-.detail-drawer {
-  .el-drawer__header {
-    border-bottom: 1px solid var(--border-light);
-    padding: 16px 20px;
-    margin-bottom: 0;
-  }
-  .el-drawer__body {
-    padding: 20px;
-  }
+.data-table {
+  overflow: hidden;
+  padding: 0;
 }
 
-/* ===== 双栏布局 ===== */
+.data-table .el-table {
+  --el-table-header-bg-color: #F8FAFC;
+  --el-table-row-hover-bg-color: #F4F9FF;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-card {
+  min-height: 210px;
+}
+
+.dashboard-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.status-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.status-distribution__item,
+.event-row,
+.summary-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.status-distribution__item:last-child,
+.event-row:last-child,
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.status-distribution__count,
+.summary-row__value {
+  margin-left: auto;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.event-row__desc,
+.summary-row__label {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fsu-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.fsu-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 250px;
+  padding: 18px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.fsu-card:hover {
+  border-color: #B7D8FB;
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.fsu-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fsu-card__code {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.fsu-card__site {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.fsu-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--app-primary);
+  font-size: 24px;
+  background: var(--app-primary-light);
+  border-radius: 8px;
+}
+
+.fsu-card__body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.fsu-card__field {
+  min-width: 0;
+}
+
+.fsu-card__field-label {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.fsu-card__field-value {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fsu-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.compact-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.point-value {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.point-value__meaning {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.detail-drawer .el-drawer__header {
+  padding: 16px 20px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detail-drawer .el-drawer__body {
+  padding: 20px;
+}
+
 .two-column {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-/* ===== raw XML 代码区 ===== */
 .raw-xml-viewer {
-  background: #1E1E1E;
-  color: #D4D4D4;
-  border-radius: var(--radius-panel);
+  max-height: 60vh;
   padding: 16px;
+  overflow: auto;
+  color: #D4D4D4;
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.6;
-  overflow: auto;
-  max-height: 60vh;
   white-space: pre-wrap;
   word-break: break-all;
+  background: #1E1E1E;
+  border-radius: var(--radius-panel);
 }
 
-/* ===== 空状态 / 错误状态 ===== */
 .state-placeholder {
   display: flex;
   flex-direction: column;
@@ -77,8 +275,39 @@
   justify-content: center;
   padding: 48px 16px;
   color: var(--text-muted);
+}
 
-  .state-icon { font-size: 48px; margin-bottom: 12px; }
-  .state-title { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
-  .state-desc { font-size: 13px; }
+.state-placeholder .state-icon {
+  margin-bottom: 12px;
+  font-size: 48px;
+}
+
+.state-placeholder .state-title {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.state-placeholder .state-desc {
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-grid,
+  .two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metric-row,
+  .fsu-card-grid {
+    grid-template-columns: 1fr;
+  }
 }

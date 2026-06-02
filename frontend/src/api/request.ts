@@ -7,11 +7,12 @@ const request = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
-// 请求拦截器：添加 Authorization header (FE-AUTH-005)
+// 请求拦截器：添加 Authorization header (FE-AUTH-005 + FE-AUTH-PERSIST-FIX-001)
 request.interceptors.request.use((config) => {
   const userStore = useUserStore()
-  if (userStore.token) {
-    config.headers.Authorization = `Bearer ${userStore.token}`
+  const t = userStore.token || localStorage.getItem('fsu_auth_token')
+  if (t) {
+    config.headers.Authorization = `Bearer ${t}`
   }
   return config
 })

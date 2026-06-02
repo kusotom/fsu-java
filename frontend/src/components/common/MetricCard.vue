@@ -1,6 +1,9 @@
 <template>
   <div class="metric-card" :class="`metric-card--${status}`">
-    <div class="metric-card__label">{{ title }}</div>
+    <div class="metric-card__head">
+      <div class="metric-card__label">{{ title }}</div>
+      <span class="metric-card__indicator"></span>
+    </div>
     <div class="metric-card__value">
       <template v-if="loading"><span class="metric-card__skeleton">&nbsp;</span></template>
       <template v-else>{{ formattedValue }}<span v-if="unit" class="metric-card__unit">{{ unit }}</span></template>
@@ -41,23 +44,56 @@ const formattedValue = computed(() => {
 
 <style scoped>
 .metric-card {
-  background: var(--app-card-bg);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 20px 24px;
-  min-width: 160px;
+  position: relative;
+  background: var(--app-card-bg, #fff);
+  border: 1px solid var(--border-light, #ebeef5);
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 16px 20px;
+  min-width: 150px;
+  min-height: 88px;
+  transition: box-shadow 0.18s ease;
 }
-.metric-card__label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
-.metric-card__value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
-.metric-card__unit { font-size: 14px; font-weight: 400; color: var(--text-muted); margin-left: 4px; }
-.metric-card__subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.metric-card__skeleton { display: inline-block; width: 60px; height: 28px; background: var(--border-light); border-radius: 4px; animation: pulse 1.5s infinite; }
+.metric-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-color: var(--border-light, #ebeef5);
+}
+.metric-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.metric-card__indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.metric-card__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #909399);
+}
+.metric-card__value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary, #303133);
+  letter-spacing: -0.02em;
+}
+.metric-card__unit { font-size: 14px; font-weight: 400; color: var(--text-muted, #c0c4cc); margin-left: 4px; }
+.metric-card__subtitle { font-size: 12px; color: var(--text-muted, #c0c4cc); margin-top: 4px; }
+.metric-card__skeleton { display: inline-block; width: 60px; height: 28px; background: var(--border-light, #ebeef5); border-radius: 4px; animation: pulse 1.5s infinite; }
 .metric-card__trend { font-weight: 600; }
 .metric-card__trend--up { color: var(--status-online); }
 .metric-card__trend--down { color: var(--status-alarm); }
-.metric-card--warning { border-left: 3px solid var(--status-warning); }
-.metric-card--danger { border-left: 3px solid var(--status-alarm); }
-.metric-card--info { border-left: 3px solid var(--status-info); }
-.metric-card--muted { opacity: 0.6; }
+.metric-card--normal .metric-card__indicator { background: var(--status-online, #67c23a); }
+.metric-card--warning .metric-card__indicator { background: var(--status-warning, #e6a23c); }
+.metric-card--danger .metric-card__indicator { background: var(--status-alarm, #f56c6c); }
+.metric-card--info .metric-card__indicator { background: var(--status-info, #409eff); }
+.metric-card--muted { opacity: 0.55; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>

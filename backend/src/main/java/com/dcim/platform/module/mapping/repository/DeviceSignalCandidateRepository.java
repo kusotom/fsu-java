@@ -13,6 +13,10 @@ public interface DeviceSignalCandidateRepository extends JpaRepository<DeviceSig
     Optional<DeviceSignalCandidateEntity> findFirstByFsuIdAndDeviceCodeAndSignalId(String fsuId, String deviceCode, String signalId);
     Optional<DeviceSignalCandidateEntity> findFirstByDeviceIdAndSignalId(String deviceId, String signalId);
     Optional<DeviceSignalCandidateEntity> findFirstByDeviceCodeAndSignalId(String deviceCode, String signalId);
+    Optional<DeviceSignalCandidateEntity> findFirstByFsuIdAndDeviceId(String fsuId, String deviceId);
+    Optional<DeviceSignalCandidateEntity> findFirstByFsuIdAndDeviceCode(String fsuId, String deviceCode);
+    Optional<DeviceSignalCandidateEntity> findFirstByDeviceId(String deviceId);
+    Optional<DeviceSignalCandidateEntity> findFirstByDeviceCode(String deviceCode);
     Optional<DeviceSignalCandidateEntity> findFirstByFsuIdAndDeviceIdAndSignalIdAndMappingSource(
             String fsuId, String deviceId, String signalId, String mappingSource);
     List<DeviceSignalCandidateEntity> findByFsuIdOrderByDeviceIdAscSignalIdAsc(String fsuId);

@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <PageHeader title="站点实时数据" description="站点监控下的设备点位实时状态、采集时间、映射状态和数据质量" />
+  <div class="page-template">
+    <PageHeader title="站点实时数据" description="站点监控下的 FSU 点位、传感器与实时状态" />
     <SiteMonitorTabs />
 
     <!-- ===== 状态提示 ===== -->
@@ -11,26 +11,27 @@
       <el-select v-model="filterFsu" placeholder="FSU" clearable size="small" style="width: 160px">
         <el-option v-for="f in fsuList" :key="f" :label="f" :value="f" />
       </el-select>
-      <el-select v-model="filterType" placeholder="点位类型" clearable size="small" style="width: 140px">
+      <el-select v-model="filterType" placeholder="测点类型" clearable size="small" style="width: 140px">
         <el-option label="模拟量(AI)" value="AI" />
         <el-option label="数字量(DI)" value="DI" />
         <el-option label="控制量(DO)" value="DO" />
       </el-select>
-      <el-select v-model="filterMapping" placeholder="映射状态" clearable size="small" style="width: 140px">
-        <el-option label="候选映射" value="MAPPED_CANDIDATE" />
-        <el-option label="模板候选" value="TEMPLATE_ONLY" />
-        <el-option label="待真实确认" value="PENDING_REAL_DATA" />
-        <el-option label="未映射" value="UNMAPPED" />
+      <el-select v-model="filterMapping" placeholder="数据状态" clearable size="small" style="width: 150px">
+        <el-option label="正常" value="normal" />
+        <el-option label="待确认" value="warning" />
+        <el-option label="告警" value="alarm" />
+        <el-option label="离线" value="offline" />
+        <el-option label="历史待回填" value="legacy" />
+        <el-option label="未映射" value="unmapped" />
       </el-select>
     </FilterPanel>
 
     <!-- ===== 指标卡片 ===== -->
     <div class="metric-row" style="margin-bottom: 16px">
-      <MetricCard title="实时点位" :value="totalPoints" status="info" />
-      <MetricCard title="有值点位" :value="pointsWithValue" status="normal" />
-      <MetricCard title="真实未映射" :value="unmappedCount" :status="unmappedCount > 0 ? 'warning' : 'normal'" />
-      <MetricCard title="历史待回填" :value="historicalBackfillCount" :status="historicalBackfillCount > 0 ? 'warning' : 'normal'" />
-      <MetricCard title="解析异常" :value="parseErrorCount" :status="parseErrorCount > 0 ? 'danger' : 'normal'" />
+      <MetricCard title="FSU 点位" :value="fsuPointCount" status="info" />
+      <MetricCard title="实时测点" :value="realtimeSignalCount" status="normal" />
+      <MetricCard title="异常测点" :value="dataAnomalyCount" :status="dataAnomalyCount > 0 ? 'warning' : 'normal'" />
+      <MetricCard title="待映射" :value="unmappedCount" :status="unmappedCount > 0 ? 'warning' : 'normal'" />
     </div>
 
     <!-- ===== 未映射提示 ===== -->
@@ -38,73 +39,20 @@
 
     <!-- ===== 主体表格 ===== -->
     <div class="app-card data-table" style="padding: 0; overflow: hidden">
-      <el-table :data="filteredData" stripe v-loading="loading" size="small" empty-text=" ">
-        <el-table-column prop="fsuCode" label="FSU" width="120" />
-        <el-table-column prop="deviceId" label="设备" width="140">
+      <el-table :data="filteredData" stripe v-loading="loading" size="small" empty-text=" " :span-method="fsuSpanMethod">
+        <el-table-column prop="fsuPointName" label="FSU / 点位" min-width="150" />
+        <el-table-column prop="sensorName" label="测点名称" min-width="160" />
+        <el-table-column label="当前值 / 状态" min-width="180">
           <template #default="{ row }">
-            <span v-if="row.deviceId">{{ row.deviceId }}</span>
-            <span v-else style="color: var(--text-muted)">--</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="pointName" label="点位名称" min-width="160">
-          <template #default="{ row }">
-            <span v-if="row.pointName">{{ row.pointName }}</span>
-            <span v-else style="color: var(--text-muted)">未命名点位</span>
-            <el-tag v-if="row.needRealDataConfirm" size="small" type="warning" style="margin-left: 6px">待确认</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="currentValue" label="当前值" width="130" align="right">
-          <template #default="{ row }">
-            <span v-if="row.currentValue !== null && row.currentValue !== undefined" class="point-value">
-              {{ formatValue(row.currentValue) }}
+            <span class="realtime-value-cell" :class="{ 'realtime-value-cell--status': !row.displayUnit }">
+              <span class="realtime-value-main">{{ row.displayValueWithUnit }}</span>
+              <span v-if="row.displayUnit" class="realtime-value-unit">{{ row.displayUnit }}</span>
             </span>
-            <span v-else style="color: var(--text-muted)">--</span>
           </template>
         </el-table-column>
-        <el-table-column prop="valueMeaning" label="值含义" min-width="120">
+        <el-table-column prop="collectTime" label="采集时间" width="170">
           <template #default="{ row }">
-            <span v-if="row.valueMeaning">{{ row.valueMeaning }}</span>
-            <span v-else style="color: var(--text-muted)">--</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="unit" label="单位" width="80">
-          <template #default="{ row }">
-            <span v-if="row.unit">{{ row.unit }}</span>
-            <span v-else style="color: var(--text-muted); font-size: 12px">待确认</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="pointType" label="类型" width="70">
-          <template #default="{ row }">
-            <el-tag size="small" :type="row.pointType === 'DI' ? 'info' : ''">{{ row.pointType || '-' }}</el-tag>
-            <el-tooltip v-if="row.pointType === 'DI'" content="DI 编码待确认，请勿硬编码 0/1 语义" placement="top">
-              <span style="color: var(--status-warning); font-size: 11px; margin-left: 2px">?</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column prop="valueStatus" label="质量" width="80">
-          <template #default="{ row }">
-            <StatusBadge :status="row.valueStatus || 'NORMAL'" />
-          </template>
-        </el-table-column>
-        <el-table-column label="映射" width="120">
-          <template #default="{ row }">
-            <StatusBadge :status="mappingStatusType(row.mappingStatus)" :label="mappingStatusLabel(row.mappingStatus)" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="mappingConfidence" label="置信度" width="110">
-          <template #default="{ row }">
-            <el-tag size="small" :type="confidenceTagType(row.mappingConfidence)">{{ row.mappingConfidence || 'UNKNOWN' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="source" label="来源" width="150">
-          <template #default="{ row }">
-            <span>{{ row.source || row.templateVariant || '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="collectTime" label="采集时间" width="160">
-          <template #default="{ row }">
-            <span v-if="row.collectTime" style="font-size: 12px; color: var(--text-secondary)">{{ row.collectTime }}</span>
-            <span v-else style="color: var(--text-muted); font-size: 12px">--</span>
+            <span style="font-size: 12px; color: var(--text-secondary)">{{ row.collectTime }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -124,18 +72,20 @@ import MetricCard from '@/components/common/MetricCard.vue'
 import DataStateAlert from '@/components/common/DataStateAlert.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
-import StatusBadge from '@/components/common/StatusBadge.vue'
 import { getRealtimeData } from '@/api/telemetry'
+import { getSites, getFsuDevices } from '@/api/resource'
 import {
-  isHistoricalRealtimeRow,
-  isTrueUnmappedPoint,
-  mappingConfidenceTagType as confidenceTagType,
-  mappingStatusBadgeStatus as mappingStatusType,
-  mappingStatusLabel,
-} from '@/utils/mappingStatus'
+  extractApiRows,
+  normalizeRealtimePoints,
+  enrichSiteNames,
+  summarizeRealtimePoints,
+  type BusinessRealtimePoint,
+} from '@/utils/monitorAdapters'
 
 const loading = ref(false)
 const rawData = ref<any[]>([])
+/** FE-REALTIME-SITE-NAME-BINDING-FINAL-FIX-004: fsuId → 真实站点名称 (来自站点列表) */
+const siteNameByFsuId = ref<Map<number, string>>(new Map())
 const fsuList = ref<string[]>([])
 const filterFsu = ref('')
 const filterType = ref('')
@@ -148,80 +98,42 @@ const stateMeta = computed(() => ({
   errorMessage: '',
 }))
 
-// ===== 数据归一化 =====
-interface PointRow {
-  fsuCode: string; deviceId: string; pointCode: string; signalId: string;
-  pointName: string; currentValue: number | string | null; unit: string;
-  valueMeaning: string; pointType: string; valueStatus: string; quality: string;
-  collectTime: string; receiveTime: string; mappingStatus: string;
-  mappingConfidence: string; templateVariant: string; needRealDataConfirm: boolean;
-  source: string;
-}
-
-const normalizedData = computed<PointRow[]>(() => {
-  return rawData.value.map((d: any): PointRow => {
-    const mappedStatus = normalizeRealtimeStatus(d)
-    return {
-    fsuCode: d.fsuCode || (d.fsuId ? `FSU-${d.fsuId}` : '-'),
-    deviceId: d.deviceId || d.deviceCode || '-',
-    pointCode: d.pointCode || d.point_code || '',
-    signalId: d.signalId || '',
-    pointName: d.pointName || d.point_name || d.signalName || '',
-    currentValue: d.valueNumber ?? d.valueText ?? d.value ?? d.measuredVal ?? null,
-    unit: d.unit || '',
-    valueMeaning: d.valueMeaning || '',
-    pointType: d.pointType || d.point_type || d.dataType || '',
-    valueStatus: d.valueStatus || d.status || 'NORMAL',
-    quality: d.quality || '',
-    collectTime: d.collectTime || d.collect_time || '',
-    receiveTime: d.receiveTime || d.receive_time || '',
-    mappingStatus: mappedStatus,
-    mappingConfidence: d.mappingConfidence || 'UNKNOWN',
-    templateVariant: d.templateVariant || 'UNKNOWN',
-    needRealDataConfirm: d.needRealDataConfirm === true,
-    source: d.source || (mappedStatus === 'HISTORICAL_PENDING_BACKFILL' ? 'legacy_realtime_data' : ''),
-  }
-  })
-})
+const normalizedData = computed<BusinessRealtimePoint[]>(() =>
+  enrichSiteNames(normalizeRealtimePoints(rawData.value), siteNameByFsuId.value))
+const realtimeSummary = computed(() => summarizeRealtimePoints(normalizedData.value))
 
 const filteredData = computed(() => {
   let rows = normalizedData.value
   if (filterFsu.value) rows = rows.filter(r => r.fsuCode.includes(filterFsu.value))
   if (filterType.value) rows = rows.filter(r => r.pointType === filterType.value)
-  if (filterMapping.value) rows = rows.filter(r => (r.mappingStatus || '').toUpperCase() === filterMapping.value)
+  if (filterMapping.value) rows = rows.filter(r => r.businessState === filterMapping.value)
   return rows
 })
 
-const totalPoints = computed(() => normalizedData.value.length)
-const pointsWithValue = computed(() => normalizedData.value.filter(r => r.currentValue !== null && r.currentValue !== undefined).length)
-const unmappedCount = computed(() => normalizedData.value.filter(r => isTrueUnmappedPoint(r as any)).length)
-const historicalBackfillCount = computed(() => normalizedData.value.filter(r => isHistoricalRealtimeRow(r as any)).length)
-const parseErrorCount = computed(() => 0) // populated when API returns parseError meta
+const pointsWithValue = computed(() => realtimeSummary.value.withValue)
+const fsuPointCount = computed(() => realtimeSummary.value.fsuPointCount)
+const realtimeSignalCount = computed(() => realtimeSummary.value.realtimeSignalCount)
+const unmappedCount = computed(() => realtimeSummary.value.trueUnmapped)
+const dataAnomalyCount = computed(() => realtimeSummary.value.anomaly)
 
 const emptyDescription = computed(() => {
   if (filterFsu.value || filterType.value || filterMapping.value) return '当前筛选条件下无匹配数据，请调整筛选条件'
   return '暂无实时数据记录，请确认 FSU 在线并已上报数据'
 })
 
-function formatValue(v: number | string | null): string {
-  if (v === null || v === undefined || v === '') return '--'
-  if (typeof v === 'number') {
-    if (Number.isInteger(v)) return String(v)
-    return v.toFixed(2)
+// ===== FSU 列合并 (span-method) =====
+const fsuSpanMethod = ({ rowIndex, columnIndex }: { rowIndex: number; columnIndex: number }) => {
+  if (columnIndex !== 0) return { rowspan: 1, colspan: 1 }
+  const rows = filteredData.value
+  const current = rows[rowIndex]
+  const prev = rows[rowIndex - 1]
+  if (prev && prev.fsuPointName === current.fsuPointName) return { rowspan: 0, colspan: 0 }
+  let count = 1
+  for (let i = rowIndex + 1; i < rows.length; i++) {
+    if (rows[i].fsuPointName === current.fsuPointName) count++
+    else break
   }
-  const n = Number(v)
-  if (!isNaN(n)) {
-    if (Number.isInteger(n)) return String(n)
-    return n.toFixed(2)
-  }
-  return String(v)
-}
-
-function normalizeRealtimeStatus(d: any): string {
-  if (d.mappingStatus) return d.mappingStatus
-  if (isHistoricalRealtimeRow(d)) return 'HISTORICAL_PENDING_BACKFILL'
-  if (d.signalName || d.pointName || d.point_name) return 'TEMPLATE_ONLY'
-  return 'HISTORICAL_PENDING_BACKFILL'
+  return { rowspan: count, colspan: 1 }
 }
 
 // ===== 数据加载 =====
@@ -229,8 +141,30 @@ onMounted(async () => {
   loading.value = true
   dataState.value = 'normal'
   try {
-    const res: any = await getRealtimeData()
-    const data = Array.isArray(res) ? res : (res?.data || res?.data?.data || [])
+    // FE-REALTIME-SITE-NAME-BINDING-FINAL-FIX-004: 并行加载实时数据 + 站点列表 + FSU设备
+    const [res, sitesRes, fsusRes] = await Promise.all([
+      getRealtimeData(),
+      getSites().catch(() => null),
+      getFsuDevices().catch(() => null),
+    ]) as any[]
+
+    // 构建 fsuId → siteName 映射 (FsuDevice.siteId → Site.id → Site.siteName)
+    const sites = extractApiRows(sitesRes)
+    const fsus = extractApiRows(fsusRes)
+    const siteById = new Map<number, string>()
+    for (const s of sites) {
+      if (s.id != null && s.siteName) siteById.set(Number(s.id), String(s.siteName))
+    }
+    const map = new Map<number, string>()
+    for (const f of fsus) {
+      if (f.id != null && f.siteId != null) {
+        const name = siteById.get(Number(f.siteId))
+        if (name) map.set(Number(f.id), name)
+      }
+    }
+    siteNameByFsuId.value = map
+
+    const data = extractApiRows(res)
     rawData.value = data
 
     // 提取 FSU 列表
@@ -257,5 +191,24 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.point-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.realtime-value-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+}
+.realtime-value-main {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-primary, #303133);
+  letter-spacing: 0;
+}
+.realtime-value-unit {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-secondary, #909399);
+}
+.realtime-value-cell--status .realtime-value-main {}
 </style>

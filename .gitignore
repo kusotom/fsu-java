@@ -21,3 +21,4 @@ logs/
 # Env
 .env
 .env.local
+backend/target/

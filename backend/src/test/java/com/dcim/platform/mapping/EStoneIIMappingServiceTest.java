@@ -56,11 +56,38 @@ class EStoneIIMappingServiceTest {
                 "51051243812345", "51051241820004", null, "510000250", "510000250", "1");
 
         assertEquals("烟感", result.signalName());
+        assertEquals("Smoke", result.deviceName());
         assertEquals("有告警", result.valueMeaning());
         assertEquals("MAPPED_CANDIDATE", result.mappingStatus());
         assertEquals("HIGH", result.mappingConfidence());
         assertEquals("DI", result.signalType());
         assertEquals("device_signal_candidate", result.source());
+    }
+
+    @Test
+    void candidateSignalNameIsUsedWhenSignalDictionaryIsMissing() {
+        candidates.put(candidateKey("51051243812345", "51051241830004", "510000211"),
+                candidate("51051241830004", "TempHumidity", "510000211", "I2C温度", "HIGH", "MAPPED_CANDIDATE"));
+
+        EStoneIIMappingResult result = mappingService.resolveRealtime(
+                "51051243812345", "51051241830004", null, "510000211", "510000211", "25.6");
+
+        assertEquals("TempHumidity", result.deviceName());
+        assertEquals("I2C温度", result.signalName());
+        assertEquals("MAPPED_CANDIDATE", result.mappingStatus());
+    }
+
+    @Test
+    void unresolvedSignalKeepsKnownDeviceName() {
+        candidates.put("device|51051243812345|51051241830004",
+                candidate("51051241830004", "TempHumidity", "510000211", "I2C温度", "HIGH", "MAPPED_CANDIDATE"));
+
+        EStoneIIMappingResult result = mappingService.resolveRealtime(
+                "51051243812345", "51051241830004", null, "999999999", "999999999", "1");
+
+        assertEquals("UNMAPPED", result.mappingStatus());
+        assertEquals("TempHumidity", result.deviceName());
+        assertNull(result.signalName());
     }
 
     @Test
@@ -202,9 +229,14 @@ class EStoneIIMappingServiceTest {
                 (proxy, method, args) -> switch (method.getName()) {
                     case "findFirstByFsuIdAndDeviceIdAndSignalId" ->
                             Optional.ofNullable(candidates.get(candidateKey((String) args[0], (String) args[1], (String) args[2])));
+                    case "findFirstByFsuIdAndDeviceId" ->
+                            Optional.ofNullable(candidates.get("device|" + args[0] + "|" + args[1]));
                     case "findFirstByFsuIdAndDeviceCodeAndSignalId",
                          "findFirstByDeviceIdAndSignalId",
                          "findFirstByDeviceCodeAndSignalId",
+                         "findFirstByFsuIdAndDeviceCode",
+                         "findFirstByDeviceId",
+                         "findFirstByDeviceCode",
                          "findFirstByFsuIdAndDeviceIdAndSignalIdAndMappingSource" -> Optional.empty();
                     case "count" -> 23L;
                     case "save" -> args[0];
@@ -262,13 +294,18 @@ class EStoneIIMappingServiceTest {
 
     private static DeviceSignalCandidateEntity candidate(String deviceId, String deviceName, String signalId,
                                                          String confidence, String status) {
+        return candidate(deviceId, deviceName, signalId, deviceName, confidence, status);
+    }
+
+    private static DeviceSignalCandidateEntity candidate(String deviceId, String deviceName, String signalId,
+                                                         String signalName, String confidence, String status) {
         DeviceSignalCandidateEntity candidate = new DeviceSignalCandidateEntity();
         candidate.setFsuId("51051243812345");
         candidate.setDeviceId(deviceId);
         candidate.setDeviceCode(deviceId);
         candidate.setDeviceName(deviceName);
         candidate.setSignalId(signalId);
-        candidate.setSignalName(deviceName);
+        candidate.setSignalName(signalName);
         candidate.setConfidence(confidence);
         candidate.setTemplateVariant("BOTH");
         candidate.setNeedRealDataConfirm(true);

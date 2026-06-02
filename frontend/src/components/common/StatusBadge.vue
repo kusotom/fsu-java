@@ -1,7 +1,7 @@
 <template>
   <el-tooltip :content="tooltip || label" :disabled="!tooltip && !showTooltip" placement="top">
-    <el-tag :type="tagType" :size="size" :effect="effect">
-      {{ label }}
+    <el-tag class="status-badge" :type="tagType" :size="size" :effect="effect">
+      {{ innerLabel }}
     </el-tag>
   </el-tooltip>
 </template>

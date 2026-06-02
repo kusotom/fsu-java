@@ -35,6 +35,7 @@ public class BInterfaceFrontendDtos {
 
     public static class AlarmDto {
         public Long id; public String fsuCode; public String deviceId; public String deviceCode;
+        public String deviceName;
         public String spid; public String signalId; public String serialNo;
         public String eventId; public String signalName; public String eventName; public String alarmMeaning; public String eventSeverity;
         public String alarmLevel; public String alarmStatus; public String alarmDesc; public String alarmType;
@@ -44,9 +45,10 @@ public class BInterfaceFrontendDtos {
     }
 
     public static class RealtimePointDto {
-        public String fsuCode; public String deviceId; public String deviceCode;
+        public String fsuCode; public String stationName; public String siteName;
+        public String deviceId; public String deviceCode;
         public String deviceName;
-        public String spid; public String signalId; public String signalName; public String signalType; public String unit;
+        public String spid; public String signalId; public String pointName; public String signalName; public String signalType; public String unit;
         public String value; public String valueMeaning; public String rawValue; public String quality;
         public String signalCategory; public String mappingStatus; public String mappingConfidence; public String templateVariant;
         public Boolean needRealDataConfirm; public Boolean verifiedByRealData; public Boolean derived; public String source;

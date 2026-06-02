@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
     redirect: '/dashboard',
     children: [
       // ========== 1. 监控中心 ==========
-      { path: 'dashboard', name: 'Dashboard', meta: { title: '监控驾驶舱', requiresAuth: true }, component: () => import('../views/dashboard/DashboardView.vue') },
+      { path: 'dashboard', name: 'Dashboard', meta: { title: '监控主页', requiresAuth: true }, component: () => import('../views/dashboard/DashboardView.vue') },
       { path: 'sites', name: 'Sites', meta: { title: '站点监控', requiresAuth: true }, component: () => import('../views/resource/SiteManagementView.vue') },
       { path: 'sites/realtime', name: 'RealtimeData', meta: { title: '站点实时数据', requiresAuth: true }, component: () => import('../views/telemetry/RealtimeDataView.vue') },
       { path: 'telemetry/realtime', redirect: '/sites/realtime' },

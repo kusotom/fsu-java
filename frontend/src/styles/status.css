@@ -19,13 +19,14 @@
 .alarm-level {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
 }
-.alarm-level--CRITICAL { color: var(--alarm-critical); background: #FEE2E2; }
-.alarm-level--MAJOR    { color: var(--alarm-major);    background: #FEE2E2; }
-.alarm-level--MINOR    { color: var(--alarm-minor);    background: #FFF7ED; }
-.alarm-level--WARN     { color: var(--alarm-warning);  background: #FEFCE8; }
-.alarm-level--INFO     { color: var(--alarm-info);     background: #EFF6FF; }
+.alarm-level--CRITICAL { color: var(--alarm-critical); background: #FEE2E2; border: 1px solid #FECACA; }
+.alarm-level--MAJOR    { color: var(--alarm-major);    background: #FEF2F2; border: 1px solid #FECACA; }
+.alarm-level--MINOR    { color: var(--alarm-minor);    background: #FFF7ED; border: 1px solid #FED7AA; }
+.alarm-level--WARN     { color: var(--alarm-warning);  background: #FFF8E8; border: 1px solid #F3D19E; }
+.alarm-level--INFO     { color: var(--alarm-info);     background: #ECF5FF; border: 1px solid #B7D8FB; }
+.alarm-level--UNKNOWN  { color: var(--text-muted);     background: #F4F6F8; border: 1px solid #E5EAF3; }

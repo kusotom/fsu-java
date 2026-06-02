@@ -48,7 +48,7 @@ public class EStoneIIMappingService {
             DeviceSignalCandidateEntity c = candidate.get();
             EStoneIISignalDictionaryEntity s = signal.orElse(null);
             return buildSignalResult(fsuId, c.getDeviceId(), c.getDeviceCode(), c.getDeviceName(),
-                    firstNonBlank(spid, normalizedSignalId), normalizedSignalId, value, s,
+                    firstNonBlank(spid, normalizedSignalId), normalizedSignalId, value, s, c.getSignalName(),
                     c.getMappingStatus(), c.getConfidence(), c.getTemplateVariant(),
                     Boolean.TRUE.equals(c.getNeedRealDataConfirm()), Boolean.TRUE.equals(c.getVerifiedByRealData()),
                     "device_signal_candidate", null);
@@ -56,7 +56,7 @@ public class EStoneIIMappingService {
         if (signal.isPresent()) {
             EStoneIISignalDictionaryEntity s = signal.get();
             return buildSignalResult(fsuId, deviceId, deviceCode, null,
-                    firstNonBlank(spid, normalizedSignalId), normalizedSignalId, value, s,
+                    firstNonBlank(spid, normalizedSignalId), normalizedSignalId, value, s, null,
                     "TEMPLATE_ONLY", s.getMappingConfidence(), s.getTemplateVariant(),
                     true, false, "signal_dictionary_fallback", null);
         }
@@ -107,9 +107,11 @@ public class EStoneIIMappingService {
                 : (s != null ? s.getTemplateVariant() : e != null ? e.getTemplateVariant() : "UNKNOWN");
         boolean needConfirm = c != null ? Boolean.TRUE.equals(c.getNeedRealDataConfirm()) : true;
         boolean verified = c != null && Boolean.TRUE.equals(c.getVerifiedByRealData());
-        return new EStoneIIMappingResult(fsuId, deviceId, deviceCode, c != null ? c.getDeviceName() : null,
+        return new EStoneIIMappingResult(fsuId, firstNonBlank(c != null ? c.getDeviceId() : null, deviceId),
+                firstNonBlank(c != null ? c.getDeviceCode() : null, deviceCode),
+                firstNonBlank(c != null ? c.getDeviceName() : null, resolveDeviceName(fsuId, deviceId, deviceCode)),
                 firstNonBlank(spid, normalizedSignalId), normalizedSignalId,
-                s != null ? s.getSignalName() : null,
+                firstNonBlank(s != null ? s.getSignalName() : null, c != null ? c.getSignalName() : null),
                 s != null ? s.getUnit() : null,
                 alarmValue,
                 s != null ? parser.meaningOf(s.getSignalMeaningsRaw(), alarmValue) : null,
@@ -129,7 +131,8 @@ public class EStoneIIMappingService {
                                                                 String signalId, String value,
                                                                 BInterface2016StandardSignalIndexService.StandardSignal s,
                                                                 String eventId, String reason) {
-        return new EStoneIIMappingResult(fsuId, deviceId, deviceCode, null, spid, signalId,
+        return new EStoneIIMappingResult(fsuId, deviceId, deviceCode,
+                resolveDeviceName(fsuId, deviceId, deviceCode), spid, signalId,
                 s.signalName(),
                 s.unit(),
                 value,
@@ -178,11 +181,11 @@ public class EStoneIIMappingService {
 
     private EStoneIIMappingResult buildSignalResult(String fsuId, String deviceId, String deviceCode,
                                                     String deviceName, String spid, String signalId, String value,
-                                                    EStoneIISignalDictionaryEntity s, String status,
+                                                    EStoneIISignalDictionaryEntity s, String fallbackSignalName, String status,
                                                     String confidence, String variant, boolean needConfirm,
                                                     boolean verified, String source, String reason) {
         return new EStoneIIMappingResult(fsuId, deviceId, deviceCode, deviceName, spid, signalId,
-                s != null ? s.getSignalName() : null,
+                firstNonBlank(s != null ? s.getSignalName() : null, fallbackSignalName),
                 s != null ? s.getUnit() : null,
                 value,
                 s != null ? parser.meaningOf(s.getSignalMeaningsRaw(), value) : null,
@@ -195,10 +198,30 @@ public class EStoneIIMappingService {
 
     private EStoneIIMappingResult unmapped(String fsuId, String deviceId, String deviceCode,
                                            String spid, String signalId, String value, String reason) {
-        return new EStoneIIMappingResult(fsuId, deviceId, deviceCode, null, spid, signalId,
+        return new EStoneIIMappingResult(fsuId, deviceId, deviceCode,
+                resolveDeviceName(fsuId, deviceId, deviceCode), spid, signalId,
                 null, null, value, null, null, null, null, null, null, null,
                 "UNMAPPED", "UNKNOWN", "UNKNOWN", true, false, false,
                 "unmapped_observation", reason);
+    }
+
+    private String resolveDeviceName(String fsuId, String deviceId, String deviceCode) {
+        Optional<DeviceSignalCandidateEntity> candidate = Optional.empty();
+        if (!isBlank(fsuId) && !isBlank(deviceId)) {
+            candidate = candidateRepository.findFirstByFsuIdAndDeviceId(fsuId, deviceId);
+        }
+        if (candidate.isEmpty() && !isBlank(fsuId) && !isBlank(deviceCode)) {
+            candidate = candidateRepository.findFirstByFsuIdAndDeviceCode(fsuId, deviceCode);
+        }
+        if (candidate.isEmpty() && !isBlank(deviceId)) {
+            candidate = candidateRepository.findFirstByDeviceId(deviceId);
+        }
+        if (candidate.isEmpty() && !isBlank(deviceCode)) {
+            candidate = candidateRepository.findFirstByDeviceCode(deviceCode);
+        }
+        return candidate.map(DeviceSignalCandidateEntity::getDeviceName)
+                .filter(v -> !isBlank(v))
+                .orElse(null);
     }
 
     public static String normalizeSignalType(String signalCategory, String signalType) {

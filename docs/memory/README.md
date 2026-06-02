@@ -5,6 +5,11 @@
 > 命名规则：`YYYY-MM-DD-任务编号-简短任务名.md`
 >
 > 索引按日期倒序排列。
+- [2026-06-03 FE-REALTIME-POINT-SEMANTIC-FIX-001 站点实时数据点位/设备/测点语义修复](./2026-06-03-FE-REALTIME-POINT-SEMANTIC-FIX-001-realtime-point-device-signal-semantics.md) — 修正普通实时页和监控主页的层级口径: FSU作为业务点位、Smoke/TempHumidity等作为采集设备、I2C温度/烟感等作为测点；统计区分FSU点位数/采集设备数/实时测点数，npm build通过
+- [2026-06-02 DATA-MAPPING-NAME-FIX-001 设备/点位名称未确认诊断与修复](./2026-06-02-DATA-MAPPING-NAME-FIX-001-device-point-name-diagnosis-and-fix.md) — 修复后端映射结果未透传deviceName/pointName、候选signalName兜底缺失和前端adapter过早待确认问题；新增名称映射测试，188后端回归、20安全/DataScope测试与npm build通过
+- [2026-06-02 FE-MONITOR-UX-P1-001 监控与告警页面信息收敛](./2026-06-02-FE-MONITOR-UX-P1-001-monitor-and-alarm-ux-convergence.md) — 新增统一监控状态模型和数据适配器；实时数据/告警中心/驾驶舱/FSU详情主视图收敛普通业务字段，协议与映射字段下沉到技术信息，npm build通过
+- [2026-06-02 FE-ALARM-MAPPING-FIX-001 告警码表前端映射修复](./2026-06-02-FE-ALARM-MAPPING-FIX-001-alarm-dictionary-frontend-mapping.md) — 修复告警中心/驾驶舱/B接口告警页未优先消费eventName/alarmMeaning/eventSeverity的问题；新增alarmDisplay normalizer，统一告警等级/状态/名称/时间和值展示，npm build通过
+- [2026-06-01 FE-UI-STYLE-REFIT-P1-001 浅色物联网平台视觉改造](./2026-06-01-FE-UI-STYLE-REFIT-P1-001-light-iot-platform-style.md) — 前端调整为浅色物联网平台风格；Sidebar/Header/卡片/表格/标签统一改造；FSU管理卡片化；实时数据、告警中心、驾驶舱弱化技术字段；菜单结构保持收敛，npm build通过
 - [2026-06-01 FE-IA-CLEANUP-P1-001 普通业务菜单收敛](./2026-06-01-FE-IA-CLEANUP-P1-001-business-menu-cleanup.md) — 普通菜单收敛为监控中心/站点监控/三方授权/系统设置；隐藏资产与点位、点位治理、协议诊断、系统审计入口；新增站点授权/FSU授权占位页；后端compile、Security/DataScope测试与npm build通过
 - [2026-06-01 MAPPING-OBSERVATION-CLASSIFY-FIX-001 设备/点位观测分类修复](./2026-06-01-MAPPING-OBSERVATION-CLASSIFY-FIX-001-device-signal-observation-classification.md) — 收敛真正未映射点位、GET_LOGININFO设备记录、候选映射、模板待确认和历史旧数据分类；新增DEVICE_ONLY/HISTORICAL_PENDING_BACKFILL等状态；193+7+39后端测试与npm build通过
 - [2026-06-01 DATA-MAPPING-DICTIONARY-P1-VERIFY-001 B接口2016标准信号索引兼容映射复验](./2026-06-01-DATA-MAPPING-DICTIONARY-P1-VERIFY-001-binterface2016-standard-signal-review.md) — 复验0407102001/0407107001 fallback、eStoneII优先级、MAPPED_CANDIDATE前端兼容、DataScope与SET安全；小修候选映射不再写入unmapped observation；189+34+39后端测试与npm build通过

@@ -678,7 +678,9 @@ public class BInterfaceFrontendReadController {
     }
 
     private void applyAlarmMapping(AlarmDto dto, EStoneIIMappingResult mapped) {
+        dto.deviceId = mapped.deviceId() != null ? mapped.deviceId() : dto.deviceId;
         dto.deviceCode = mapped.deviceCode();
+        dto.deviceName = mapped.deviceName();
         dto.signalId = mapped.signalId();
         dto.spid = mapped.spid();
         dto.signalName = mapped.signalName();

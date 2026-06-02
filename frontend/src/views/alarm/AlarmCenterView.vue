@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-template">
     <PageHeader title="告警中心" description="查看和管理站点与 FSU 的告警记录" />
 
     <!-- ===== 状态提示 ===== -->
@@ -26,7 +26,7 @@
       </el-select>
       <el-select v-model="filterStatus" placeholder="告警状态" clearable size="small" style="width: 130px">
         <el-option label="活跃" value="ACTIVE" />
-        <el-option label="已恢复" value="CLEARED" />
+        <el-option label="已恢复" value="RECOVERED" />
         <el-option label="已确认" value="CONFIRMED" />
       </el-select>
       <el-input v-model="filterKeyword" placeholder="关键字" clearable size="small" style="width: 160px" />
@@ -35,43 +35,27 @@
     <!-- ===== 主体表格 ===== -->
     <div class="app-card data-table" style="padding: 0; overflow: hidden">
       <el-table :data="filteredData" stripe v-loading="loading" size="small" empty-text=" ">
-        <el-table-column prop="fsuId" label="FSU" width="100">
-          <template #default="{ row }"><span style="font-size: 12px">{{ row.fsuId || '-' }}</span></template>
+        <el-table-column prop="alarmLevel" label="告警等级" width="100">
+          <template #default="{ row }"><AlarmLevelTag :level="row.displayAlarmLevel" /></template>
         </el-table-column>
-        <el-table-column prop="alarmName" label="告警名称" min-width="160">
+        <el-table-column prop="alarmName" label="告警名称" min-width="180">
           <template #default="{ row }">
-            <span>{{ row.eventName || row.alarmName || row.signalName || '未命名告警' }}</span>
-            <el-tag v-if="row.needRealDataConfirm" size="small" type="warning" style="margin-left: 6px">待确认</el-tag>
+            <span>{{ row.displayAlarmName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="alarmMeaning" label="告警含义" min-width="120">
+        <el-table-column label="设备 / 测点" min-width="180">
           <template #default="{ row }">
-            <span v-if="row.alarmMeaning">{{ row.alarmMeaning }}</span>
-            <span v-else style="color: var(--text-muted)">--</span>
+            <span>{{ row.displayDevicePoint }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="alarmLevel" label="等级" width="90">
-          <template #default="{ row }"><AlarmLevelTag :level="row.alarmLevel" /></template>
+        <el-table-column prop="alarmStatus" label="告警状态" width="100">
+          <template #default="{ row }"><StatusBadge :status="statusBadge(row.displayAlarmStatus)" :label="row.displayAlarmStatusLabel" /></template>
         </el-table-column>
-        <el-table-column prop="alarmStatus" label="状态" width="80">
-          <template #default="{ row }"><StatusBadge :status="row.alarmStatus" /></template>
-        </el-table-column>
-        <el-table-column prop="alarmValue" label="告警值" width="100" :show-overflow-tooltip="true" />
         <el-table-column prop="occurTime" label="发生时间" width="160">
-          <template #default="{ row }"><span style="font-size: 12px; color: var(--text-secondary)">{{ row.occurTime || row.alarmTime || '-' }}</span></template>
+          <template #default="{ row }"><span style="font-size: 12px; color: var(--text-secondary)">{{ row.displayOccurTime || '-' }}</span></template>
         </el-table-column>
         <el-table-column prop="clearTime" label="恢复时间" width="160">
-          <template #default="{ row }"><span style="font-size: 12px; color: var(--text-secondary)">{{ row.clearTime || row.recoveryTime || row.recoverTime || (activeTab === 'active' ? '未恢复' : '-') }}</span></template>
-        </el-table-column>
-        <el-table-column label="映射" width="120">
-          <template #default="{ row }">
-            <StatusBadge :status="mappingStatusType(row.mappingStatus)" :label="mappingStatusLabel(row.mappingStatus)" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="mappingConfidence" label="置信度" width="110">
-          <template #default="{ row }">
-            <el-tag size="small" :type="confidenceTagType(row.mappingConfidence)">{{ row.mappingConfidence || 'UNKNOWN' }}</el-tag>
-          </template>
+          <template #default="{ row }"><span style="font-size: 12px; color: var(--text-secondary)">{{ row.displayRecoverTime || (activeTab === 'active' ? '未恢复' : '-') }}</span></template>
         </el-table-column>
         <el-table-column label="操作" width="80" fixed="right">
           <template #default="{ row }">
@@ -92,32 +76,35 @@
         <!-- 业务信息 -->
         <h4 style="margin: 0 0 12px; color: var(--text-primary)">业务信息</h4>
         <el-descriptions :column="2" size="small" border style="margin-bottom: 16px">
-          <el-descriptions-item label="FSU ID">{{ selectedAlarm.fsuId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="点位编码">{{ selectedAlarm.pointCode || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="告警名称">{{ selectedAlarm.eventName || selectedAlarm.alarmName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="告警含义">{{ selectedAlarm.alarmMeaning || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="告警等级"><AlarmLevelTag :level="selectedAlarm.alarmLevel" /></el-descriptions-item>
-          <el-descriptions-item label="告警状态"><StatusBadge :status="selectedAlarm.alarmStatus" /></el-descriptions-item>
-          <el-descriptions-item label="告警值">{{ selectedAlarm.alarmValue || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="发生时间" :span="2">{{ selectedAlarm.occurTime || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="恢复时间" :span="2">{{ selectedAlarm.clearTime || '未恢复' }}</el-descriptions-item>
+          <el-descriptions-item label="FSU ID">{{ selectedAlarm.displayFsu }}</el-descriptions-item>
+          <el-descriptions-item label="测点编码">{{ selectedAlarm.spid || selectedAlarm.signalId || selectedAlarm.pointCode || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="告警名称">{{ selectedAlarm.displayAlarmName }}</el-descriptions-item>
+          <el-descriptions-item label="告警含义">{{ selectedAlarm.displayAlarmMeaning || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="告警等级"><AlarmLevelTag :level="selectedAlarm.displayAlarmLevel" /></el-descriptions-item>
+          <el-descriptions-item label="告警状态"><StatusBadge :status="statusBadge(selectedAlarm.displayAlarmStatus)" :label="selectedAlarm.displayAlarmStatusLabel" /></el-descriptions-item>
+          <el-descriptions-item label="告警值">{{ selectedAlarm.displayAlarmValue }}</el-descriptions-item>
+          <el-descriptions-item label="发生时间" :span="2">{{ selectedAlarm.displayOccurTime || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="恢复时间" :span="2">{{ selectedAlarm.displayRecoverTime || '未恢复' }}</el-descriptions-item>
         </el-descriptions>
 
-        <!-- 协议字段 -->
-        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 13px">协议字段 (B接口 SEND_ALARM)</h4>
-        <el-descriptions :column="2" size="small" border style="margin-bottom: 16px">
-          <el-descriptions-item label="SerialNo">{{ selectedAlarm.serialNo || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="DeviceID">{{ selectedAlarm.deviceId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="SPID">{{ selectedAlarm.spid || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="SignalID">{{ selectedAlarm.signalId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="EventID">{{ selectedAlarm.eventId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="SignalName">{{ selectedAlarm.signalName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="AlarmLevel">{{ selectedAlarm.alarmLevel || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="AlarmDesc">{{ selectedAlarm.alarmDesc || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="来源">{{ selectedAlarm.source || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="映射状态">{{ mappingStatusLabel(selectedAlarm.mappingStatus) }}</el-descriptions-item>
-          <el-descriptions-item label="映射置信度">{{ selectedAlarm.mappingConfidence || 'UNKNOWN' }}</el-descriptions-item>
-        </el-descriptions>
+        <el-collapse style="margin-bottom: 16px">
+          <el-collapse-item title="技术信息" name="tech">
+            <el-descriptions :column="2" size="small" border>
+              <el-descriptions-item label="SerialNo">{{ selectedAlarm.serialNo || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="DeviceID">{{ selectedAlarm.deviceId || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="SPID">{{ selectedAlarm.spid || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="SignalID">{{ selectedAlarm.signalId || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="EventID">{{ selectedAlarm.eventId || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="SignalName">{{ selectedAlarm.signalName || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="AlarmLevel">{{ selectedAlarm.alarmLevel || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="EventSeverity">{{ selectedAlarm.eventSeverity || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="AlarmDesc">{{ selectedAlarm.alarmDesc || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="来源">{{ selectedAlarm.source || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="映射状态">{{ mappingStatusLabel(selectedAlarm.mappingStatus) }}</el-descriptions-item>
+              <el-descriptions-item label="映射置信度">{{ selectedAlarm.mappingConfidence || 'UNKNOWN' }}</el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+        </el-collapse>
 
         <!-- 系统信息 -->
         <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 13px">系统信息</h4>
@@ -142,11 +129,14 @@ import DetailDrawer from '@/components/common/DetailDrawer.vue'
 import AlarmLevelTag from '@/components/common/AlarmLevelTag.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { getAlarms } from '@/api/alarm'
+import { mappingStatusLabel } from '@/utils/mappingStatus'
 import {
-  mappingConfidenceTagType as confidenceTagType,
-  mappingStatusBadgeStatus as mappingStatusType,
-  mappingStatusLabel,
-} from '@/utils/mappingStatus'
+  alarmLevelLabel,
+} from '@/utils/alarmDisplay'
+import {
+  extractApiRows,
+  normalizeBusinessAlarms,
+} from '@/utils/monitorAdapters'
 
 const loading = ref(false)
 const allAlarms = ref<any[]>([])
@@ -161,43 +151,50 @@ const dataState = ref<'normal' | 'api_not_found' | 'network_error' | 'unauthoriz
 const levels = ['CRITICAL', 'MAJOR', 'MINOR', 'WARN', 'INFO']
 
 function levelLabel(lvl: string) {
-  const map: Record<string, string> = { CRITICAL: '一级', MAJOR: '二级', MINOR: '三级', WARN: '四级', INFO: '提示' }
-  return map[lvl] || lvl
+  return alarmLevelLabel(lvl)
+}
+
+const normalizedAlarms = computed(() => normalizeBusinessAlarms(allAlarms.value))
+
+function statusBadge(status?: string) {
+  const normalized = (status || '').toUpperCase()
+  if (normalized === 'ACTIVE' || normalized === 'CONFIRMED') return 'active'
+  if (normalized === 'RECOVERED' || normalized === 'CLOSED' || normalized === 'CLEARED') return 'inactive'
+  return 'unknown'
 }
 
 // Active = alarmStatus is ACTIVE or not CLEARED
-const activeAlarms = computed(() => allAlarms.value.filter(a => {
-  const s = (a.alarmStatus || '').toUpperCase()
-  return s === 'ACTIVE' || s === 'CONFIRMED' || s === 'NEW'
-}))
+const activeAlarms = computed(() => normalizedAlarms.value.filter(a => a.displayAlarmIsActive))
 
-const historyAlarms = computed(() => allAlarms.value.filter(a => {
-  const s = (a.alarmStatus || '').toUpperCase()
-  return s === 'CLEARED' || s === 'CLOSED' || s === 'RECOVERED'
-}))
+const historyAlarms = computed(() => normalizedAlarms.value.filter(a => a.displayAlarmIsHistory))
 
 const alarmSource = computed(() => activeTab.value === 'active' ? activeAlarms.value : historyAlarms.value)
 
-const criticalCount = computed(() => alarmSource.value.filter(a => (a.alarmLevel || '').toUpperCase() === 'CRITICAL').length)
-const majorCount = computed(() => alarmSource.value.filter(a => (a.alarmLevel || '').toUpperCase() === 'MAJOR').length)
+const criticalCount = computed(() => alarmSource.value.filter(a => a.displayAlarmLevel === 'CRITICAL').length)
+const majorCount = computed(() => alarmSource.value.filter(a => a.displayAlarmLevel === 'MAJOR').length)
 const minorCount = computed(() => alarmSource.value.filter(a => {
-  const l = (a.alarmLevel || '').toUpperCase()
+  const l = a.displayAlarmLevel
   return l === 'MINOR' || l === 'WARN' || l === 'INFO'
 }).length)
 
 const filterActive = computed(() => !!(filterLevel.value || filterStatus.value || filterKeyword.value))
 const filteredData = computed(() => {
   let rows = alarmSource.value
-  if (filterLevel.value) rows = rows.filter(r => (r.alarmLevel || '').toUpperCase() === filterLevel.value.toUpperCase())
-  if (filterStatus.value) rows = rows.filter(r => (r.alarmStatus || '').toUpperCase() === filterStatus.value.toUpperCase())
+  if (filterLevel.value) rows = rows.filter(r => r.displayAlarmLevel === filterLevel.value)
+  if (filterStatus.value) rows = rows.filter(r => r.displayAlarmStatus === filterStatus.value)
   if (filterKeyword.value) {
     const kw = filterKeyword.value.toLowerCase()
     rows = rows.filter(r =>
+      (r.displayAlarmName || '').toLowerCase().includes(kw) ||
+      (r.displayAlarmMeaning || '').toLowerCase().includes(kw) ||
       (r.alarmName || '').toLowerCase().includes(kw) ||
       (r.eventName || '').toLowerCase().includes(kw) ||
       (r.signalName || '').toLowerCase().includes(kw) ||
       (r.alarmDesc || '').toLowerCase().includes(kw) ||
-      (r.pointCode || '').toLowerCase().includes(kw)
+      (r.pointCode || '').toLowerCase().includes(kw) ||
+      (r.spid || '').toLowerCase().includes(kw) ||
+      (r.eventId || '').toLowerCase().includes(kw) ||
+      (r.serialNo || '').toLowerCase().includes(kw)
     )
   }
   return rows
@@ -213,7 +210,7 @@ onMounted(async () => {
   dataState.value = 'normal'
   try {
     const res: any = await getAlarms()
-    allAlarms.value = Array.isArray(res?.data) ? res.data : (res?.data?.data || [])
+    allAlarms.value = extractApiRows(res)
     if (allAlarms.value.length === 0) dataState.value = 'empty'
   } catch (e: any) {
     allAlarms.value = []

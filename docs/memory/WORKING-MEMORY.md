@@ -1,10 +1,205 @@
 # FSU-JAVA 当前工作记忆
 
-## 最新任务：FE-IA-CLEANUP-P1-001 普通业务菜单收敛 (2026-06-01)
+## 最新任务：FE-REALTIME-POINT-SEMANTIC-FIX-001 站点实时数据点位/设备/测点语义修复 (2026-06-03)
+
+本次目标是修正“站点实时数据 > 实时数据”页面中 FSU 点位、采集设备、测点/信号混用的问题。前端普通业务展示现在明确：FSU 是业务点位层，Smoke/TempHumidity/WaterLeak/Power/Battery1 是采集设备，I2C温度/湿度/烟感/水浸/市电/电池电压是测点或监控项。
+
+本次修改:
+
+- `frontend/src/utils/monitorAdapters.ts` 新增 `fsuPointName/deviceKey/signalKey/measurementKey/displaySignalName`，并把 `displayDevice` 注明为采集设备、`displayPointName` 注明为旧字段兼容的测点/信号。
+- `summarizeRealtimePoints` 新增 `fsuPointCount/collectingDeviceCount/realtimeSignalCount`，分别统计 FSU 点位、采集设备和实时测点。
+- `RealtimeDataView.vue` 将页面说明、筛选、指标卡和主表列名改为 FSU / 点位、采集设备、测点名称、当前值/状态、单位、业务状态、采集时间。
+- `DashboardView.vue` 数据状态摘要同步展示实时测点、采集设备、FSU / 点位。
+- `FsuStatusDetailView.vue` 设备文案调整为采集设备。
+- `AlarmCenterView.vue` 普通主表“设备 / 点位”改为“设备 / 测点”，详情“点位编码”改为“测点编码”。
+
+验证结果:
+
+- `cd frontend && npm run build`：通过。
+- `vue-tsc --noEmit`：随 build 执行，通过。
+- `vite build`：通过。
+- `frontend/package.json` 无独立 `type-check` / `lint` 脚本。
+- 仍有既有 `@vueuse/core` Rollup 注释 warning 和 chunk size warning。
+
+安全边界:
+
+- 未访问真实 FSU，未执行 SET，未启 Scheduler。
+- 未修改后端协议解析、DataScope、raw XML、run-once 或 SET 权限。
+
+遗留:
+
+- `displayPointName` 仍是历史兼容字段，后续应迁移到 `displaySignalName`。
+- 建议为 `monitorAdapters.ts` 补前端单元测试。
+- FSU 详情页后续可新增“测点概览”Tab。
+
+输出:
+
+- [审计报告](../audit/FE-REALTIME-POINT-SEMANTIC-FIX-001-realtime-point-device-signal-semantics.md)
+- [后续 TODO](../tasks/FE-REALTIME-POINT-SEMANTIC-FIX-001-follow-up-todo.md)
+- [工程记忆](2026-06-03-FE-REALTIME-POINT-SEMANTIC-FIX-001-realtime-point-device-signal-semantics.md)
+
+## 上一任务：DATA-MAPPING-NAME-FIX-001 设备/点位名称未确认诊断与修复 (2026-06-02)
+
+本次目标是排查并修复普通实时数据和告警页面仍显示“设备名称未确认 / 点位名称未确认”的问题。结论为：问题不是协议资料不足，而是后端映射结果没有完整透传到 DTO，以及前端 `monitorAdapters` 对缺名称数据过早降级为待确认。
+
+本次修改:
+
+- `DeviceSignalCandidateRepository` 增加按 DeviceID / DeviceCode 查询候选设备的方法。
+- `EStoneIIMappingService` 候选映射命中但 Signal 字典暂缺时使用候选表 `signalName`；未知点位和 B接口2016 fallback 可按 DeviceID / DeviceCode 返回设备名，但未知 SignalId 仍保持 `UNMAPPED`。
+- `BInterfaceFrontendDtos` 为 `AlarmDto` 增加 `deviceName`，为 `RealtimePointDto` 增加 `pointName`。
+- `RealtimeDataService` 透传 `deviceId/deviceCode/deviceName`，并读取 `monitoring_point` 作为历史实时数据的点位名、单位、类型兜底；保留 `0407107001` 空单位，供前端显示单位待确认。
+- `AlarmRecordService` 和 `BInterfaceFrontendReadController` 告警 DTO 透传 `deviceName`。
+- `frontend/src/utils/monitorAdapters.ts` 普通表优先显示后端业务名称；历史数据缺名称时显示“历史设备/历史点位”；真正未知显示“待确认/待映射”；不再把 DeviceID/DeviceCode 当普通设备名称展示。
+- 新增 `AlarmRecordServiceNameMappingTest`，补强 `EStoneIIMappingServiceTest` 和 `RealtimeDataServiceMappingClassificationTest`。
+
+验证结果:
+
+- `cd backend && mvn -q -DskipTests compile`：通过。
+- `cd backend && mvn test -Dtest='EStoneIIMappingServiceTest,RealtimeDataServiceMappingClassificationTest,AlarmRecordServiceNameMappingTest'`：14 tests，0 failures，0 errors。
+- `cd backend && mvn test -Dtest='*Mapping*Test,*Template*Test,*Realtime*Test,*Alarm*Test'`：188 tests，0 failures，0 errors。
+- `cd backend && mvn test -Dtest='*Security*Test,*DataScope*Test'`：20 tests，0 failures，0 errors。
+- `cd frontend && npm run build`：通过，仅有既有 `@vueuse/core` Rollup 注释 warning 和 chunk size warning。
+
+安全边界:
+
+- 未访问真实 FSU，未执行 SET，未启 Scheduler。
+- 未放松 DataScope、raw XML、run-once 或 SET 权限。
+- 未引入 StoneIII、`511600xx`、`ExtendField4`。
+
+遗留:
+
+- 历史 `realtime_data` 没有 DeviceID 字段，仍需 `DATA-MAPPING-BACKFILL-P1-001` 做只读/幂等回填。
+- 长期应让 `realtime_data` 保留 DeviceID/DeviceCode，确保 `DeviceID + SignalId` 映射链路稳定。
+
+输出:
+
+- [审计报告](../audit/DATA-MAPPING-NAME-FIX-001-device-point-name-diagnosis-and-fix.md)
+- [后续 TODO](../tasks/DATA-MAPPING-NAME-FIX-001-follow-up-todo.md)
+- [工程记忆](2026-06-02-DATA-MAPPING-NAME-FIX-001-device-point-name-diagnosis-and-fix.md)
+
+## 上一任务：FE-MONITOR-UX-P1-001 监控与告警页面信息收敛 (2026-06-02)
+
+本次目标是收敛普通业务前端的数据监控与告警展示，建立统一监控状态模型和统一数据适配器，避免实时数据、告警中心、驾驶舱、FSU 详情各自解释后端字段。普通主视图只展示业务判断和操作所需信息，协议字段、映射字段、raw 类字段下沉到详情技术信息或内部诊断页面。
+
+本次修改:
+
+- 新增 `frontend/src/utils/monitorState.ts`，定义 `UnifiedDataState = normal/warning/alarm/offline/empty/stale/legacy/unmapped/parse_error/api_error/permission_denied`，并提供标签、Badge 状态、Metric 状态和异常判断。
+- 新增 `frontend/src/utils/monitorAdapters.ts`，统一 `extractApiRows`、实时点归一化、实时摘要、告警归一化、告警摘要和 FSU 设备归一化。
+- `RealtimeDataView.vue` 主表收敛为设备名称、点位名称、当前值/状态、单位、业务状态、采集时间；移除主表 FSU、点位类型、质量、映射状态等技术/排障列。
+- `AlarmCenterView.vue` 主表收敛为告警等级、告警名称、设备/点位、告警状态、发生时间、恢复时间、操作入口；SPID/SignalID/EventID/EventSeverity/映射置信度进入详情“技术信息”折叠区。
+- `DashboardView.vue` 移除 B接口报文总数和今日调用记录，改为实时数据状态、历史待回填、真实未映射的业务数据状态摘要。
+- `FsuStatusDetailView.vue` 设备主表展示设备名称、业务状态、最近发现；DeviceID/DeviceCode/source/映射状态进入技术信息折叠区。
+- `DataStateAlert.vue` 扩展统一业务状态提示，并把未映射提示改为联系平台管理员处理，不再指向普通菜单中已隐藏的点位映射页。
+
+安全边界:
+
+- 未访问真实 FSU，未执行 SET，未启 Scheduler。
+- 未修改后端协议、权限、DataScope、raw XML、run-once 或 SET 安全门。
+- 未恢复协议诊断、点位治理、系统审计普通入口。
+
+验证结果:
+
+- `cd frontend && npm run build`：通过。
+- `vue-tsc --noEmit`：通过。
+- `vite build`：通过。
+- 仍有既有 `@vueuse/core` Rollup pure annotation warning 和 chunk size warning。
+
+后续:
+
+- P1：FSU 详情页补实时数据和告警记录 Tab。
+- P1：站点详情页承载站点维度实时/告警二级交互。
+- P1：后端补稳定 `eventSeverityLabel/mappingReason`。
+
+输出:
+
+- [审计报告](../audit/FE-MONITOR-UX-P1-001-monitor-and-alarm-ux-convergence.md)
+- [后续 TODO](../tasks/FE-MONITOR-UX-P1-001-follow-up-todo.md)
+- [工程记忆](2026-06-02-FE-MONITOR-UX-P1-001-monitor-and-alarm-ux-convergence.md)
+
+## 上一任务：FE-ALARM-MAPPING-FIX-001 告警码表前端映射修复 (2026-06-02)
+
+用户反馈告警码表在前端未正确映射。复查确认后端告警 API 已返回 `eventName/alarmMeaning/eventSeverity/mappingStatus/mappingConfidence` 等字段，主要问题是前端仍在告警中心、驾驶舱和 B接口告警页按旧 `alarmLevel/alarmDesc` 字段做主展示、筛选和统计。
+
+本次修改:
+
+- 新增 `frontend/src/utils/alarmDisplay.ts`，统一 `normalizeAlarmLevel`、`normalizeAlarmStatus`、`normalizeAlarmRow`，优先使用后端 `eventSeverity/eventName/alarmMeaning`，兼容 `CRITICAL/MAJOR/MINOR/WARN/INFO`、`URGENT/IMPORTANT`、中文等级和数字码。
+- `AlarmLevelTag.vue` 改为使用统一 normalizer，未知等级降级为“待确认/原值”并保留样式。
+- `AlarmCenterView.vue` 主表、详情抽屉、等级筛选、状态筛选和统计全部使用 `displayAlarm*` 字段；详情保留原始 `AlarmLevel`，新增 `EventSeverity`。
+- `DashboardView.vue` 最新告警和告警等级分布改为同一套告警归一化逻辑。
+- `BInterfaceAlarmView.vue` 诊断页接入同一套逻辑，避免和普通告警中心口径不一致。
+- `status.css` 补充未知告警等级标签样式。
+
+安全边界:
+
+- 未访问真实 FSU，未执行 SET，未启 Scheduler。
+- 未修改后端协议、权限、DataScope、raw XML、run-once 或 SET 安全门。
+- 未新增任何控制入口。
+
+验证结果:
+
+- `cd frontend && npm run build`：通过。
+- `vue-tsc --noEmit`：通过。
+- `vite build`：通过。
+- 仍有既有 `@vueuse/core` Rollup pure annotation warning 和 chunk size warning。
+
+后续:
+
+- P1：后端输出稳定 `eventSeverityLabel` 或等价字段，减少前端对数字等级码的兼容解释。
+- P1：告警 DTO 补充 `mappingReason/unmappedReason`，便于直接展示 `UNKNOWN_EVENT_ID`。
+
+输出:
+
+- [审计报告](../audit/FE-ALARM-MAPPING-FIX-001-alarm-dictionary-frontend-mapping.md)
+- [后续 TODO](../tasks/FE-ALARM-MAPPING-FIX-001-follow-up-todo.md)
+- [工程记忆](2026-06-02-FE-ALARM-MAPPING-FIX-001-alarm-dictionary-frontend-mapping.md)
+
+## 上一任务：FE-UI-STYLE-REFIT-P1-001 浅色物联网平台视觉改造 (2026-06-01)
+
+本次参考用户提供的浅色物联网平台 UI 风格，将前端从偏工程调试后台风格调整为浅色、轻量、卡片化的动环监控平台风格。仅修改前端 UI、布局、样式和普通业务页面展示，不改后端业务逻辑、协议逻辑、DataScope、routeGuard 或 SET 安全门。
+
+本次修改:
+
+- `tokens.css` / `theme.css` / `layout.css` / `status.css`：改为 `#2F80ED` 蓝色主色、浅蓝选中态、浅灰内容区、白色卡片和轻量表格/标签/筛选区；清理旧 CSS `//` 注释 warning。
+- `BasicLayout.vue`：Sidebar 改白色，Header 改白色，菜单选中为浅蓝底蓝字，平台名保留“机房动环监控平台”。
+- `PageHeader.vue`、`MetricCard.vue`、`FsuOnlineBadge.vue`、`StatusBadge.vue`：统一轻量组件视觉；修复 `StatusBadge` 默认中文状态标签未展示的问题。
+- `FsuStatusView.vue`：FSU 管理由表格改为卡片网格，展示 FSU 编码、站点、在线/心跳、最近登录/心跳、设备数、告警数和更新时间；通信记录按钮仍仅在 `protocol:raw:view` 权限可用时显示。
+- `RealtimeDataView.vue`：保留真实未映射/历史待回填/解析异常统计，主表弱化 `mappingConfidence/source/templateVariant` 等技术字段，只展示 FSU、设备、点位名称、当前值、单位、类型、质量、状态和采集时间。
+- `DashboardView.vue`：改为浅色卡片式驾驶舱，增加历史待回填、站点摘要和异常 FSU 摘要。
+- `AlarmCenterView.vue`：告警主表移除置信度主列，协议字段继续下沉到详情抽屉。
+
+菜单和安全边界:
+
+- 普通菜单仍保持监控中心、站点监控、三方授权、系统设置四组。
+- 未恢复资产与点位、设备管理、机柜管理、点位字典、点位映射、未映射点位、系统审计、协议诊断、raw XML、run-once 普通入口。
+- raw XML 隐藏路由仍要求 `protocol:raw:view` + elevated 角色。
+- run-once 隐藏路由仍要求 `protocol:runonce:readonly` + elevated 角色。
+- 未访问真实 FSU，未启 Scheduler，未新增 SET 入口。
+
+验证结果:
+
+- `cd frontend && npm run build`：通过。
+- `vue-tsc --noEmit`：通过。
+- `vite build`：通过。
+- 旧 CSS `//` 注释 warning 已消除；仍有 `@vueuse/core` Rollup pure annotation warning 和既有 chunk size warning。
+- 未运行后端测试，原因是本次未改后端、路由权限、route guard、DataScope 或安全拦截逻辑。
+
+下一步:
+
+- `FE-UI-STYLE-P1-001`: FSU 详情页补设备、机柜、点位概览 Tab。
+- `FE-AUTH-P1-001`: 站点授权、FSU 授权接入真实后端 API。
+- `FE-DASHBOARD-CHART-P2-001`: 驾驶舱补充图表和趋势。
+
+输出:
+
+- [审计报告](../audit/FE-UI-STYLE-REFIT-P1-001-light-iot-platform-style.md)
+- [后续 TODO](../tasks/FE-UI-STYLE-REFIT-P1-001-follow-up-todo.md)
+- [工程记忆](2026-06-01-FE-UI-STYLE-REFIT-P1-001-light-iot-platform-style.md)
+
+## 上一任务：FE-IA-CLEANUP-P1-001 普通业务菜单收敛 (2026-06-01)
 
 根据最新产品口径，普通业务前端菜单已收敛为:
 
-- 监控中心: 监控驾驶舱、站点实时数据、告警中心
+- 监控中心: 监控主页、站点实时数据、告警中心
 - 站点监控: 站点列表、FSU 管理
 - 三方授权: 用户管理、角色管理、权限管理、站点授权、FSU 授权
 - 系统设置: 安全设置

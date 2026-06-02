@@ -40,8 +40,18 @@ const missCount = computed(() => props.heartbeatMissCount)
 </script>
 
 <style scoped>
-.fsu-online-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
-.fsu-online-badge__text { color: var(--text-primary); }
+.fsu-online-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 8px 2px 6px;
+  font-size: 13px;
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+}
+.fsu-online-badge__text { color: var(--text-primary); font-weight: 500; }
 .fsu-online-badge__time { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
 .fsu-online-badge__miss { color: var(--status-alarm); font-size: 11px; margin-left: 4px; }
 </style>

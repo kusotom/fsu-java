@@ -83,6 +83,9 @@ public class AlarmRecordService {
         dto.updatedAt = e.getUpdatedAt() != null ? e.getUpdatedAt().toString() : null;
         EStoneIIMappingResult mapped = mappingService.resolveAlarm(fsuCode, e.getDeviceId(), null,
                 e.getSpid(), e.getPointCode(), e.getAlarmCode(), e.getAlarmValue());
+        dto.deviceId = mapped.deviceId() != null ? mapped.deviceId() : dto.deviceId;
+        dto.deviceCode = mapped.deviceCode();
+        dto.deviceName = mapped.deviceName();
         dto.signalId = mapped.signalId();
         dto.spid = mapped.spid();
         dto.signalName = mapped.signalName();
