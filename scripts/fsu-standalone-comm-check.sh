@@ -1,49 +1,22 @@
 #!/usr/bin/env bash
 # ============================================================================
-# fsu-standalone-comm-check.sh — FSU 独立通信检查脚本 (无平台依赖)
+# fsu-standalone-comm-check.sh — FSU 独立通信主动验证脚本 (v2)
 # ============================================================================
-# 在干净远程服务器上直接测试与现场 FSU 的网络、HTTP/SOAP、只读 B接口通信。
-# 不依赖 Java/Maven/Spring Boot/PostgreSQL/平台后端。
+# 不依赖平台后端。所有 env.remote 值视为 candidate，通过实际探测验证。
 #
-# 只检查:
-#   - 本机基础环境
-#   - 到 FSU 的 DNS/IP/TCP 连通性
-#   - HTTP/SOAP 路径连通性
-#   - 可选 B接口只读 SOAP 探测 (GET_FSUINFO / GET_LOGININFO)
+# env.remote 值状态:
+#   user_supplied   — 用户填写，未经验证
+#   auto_detected   — 脚本自动发现
+#   verified        — 实际探测确认
+#   mismatch        — 与探测结果不一致
+#   unknown         — 无法确认
+#   skipped         — 未检查
 #
-# 不检查:
-#   - 平台 8080 端口
-#   - /services/SCService
-#   - 数据库
-#   - 前端页面
-#
-# 安全:
-#   - 不执行 SET / SET_* / 控制类命令
-#   - 不启动 Scheduler
-#   - 不访问数据库
-#   - 不硬编码 FSUID/token/密码
-#
-# 环境变量:
-#   FSU_HOST             FSU 地址 (必填)
-#   FSU_PORT             FSU 端口 (默认 80)
-#   FSU_SERVICE_PATH     FSUService 路径 (默认 /services/FSUService)
-#   FSU_SCHEME           http 或 https (默认 http)
-#   STATION_NAME         站点名称 (默认 1)
-#   FSUID                FSU 标识 (选填)
-#   ENABLE_SOAP_PROBE    启用只读 SOAP 探测 (默认 false)
-#   SOAP_PROBE_COMMAND   探测命令: GET_FSUINFO|GET_LOGININFO (默认 GET_FSUINFO)
-#   ENABLE_TCPDUMP       启用抓包 (默认 false)
-#   TCPDUMP_INTERFACE    抓包网卡 (默认 any)
-#   LOG_DIR              日志目录
-#   TIMEOUT_SECONDS      超时秒数 (默认 5)
-#
-# 运行:
-#   FSU_HOST=192.168.x.x ./fsu-standalone-comm-check.sh
-#   FSU_HOST=192.168.x.x ENABLE_SOAP_PROBE=true ./fsu-standalone-comm-check.sh
+# 安全: 不执行 SET/SET_*/REBOOT/UPGRADE. 不启 Scheduler. 不访问数据库.
 # ============================================================================
 set -Eeuo pipefail
 
-# ---- 默认配置 ----
+# ── 默认配置 (全部为 candidate) ──
 FSU_HOST="${FSU_HOST:-}"
 FSU_PORT="${FSU_PORT:-80}"
 FSU_SERVICE_PATH="${FSU_SERVICE_PATH:-/services/FSUService}"
@@ -54,48 +27,47 @@ ENABLE_SOAP_PROBE="${ENABLE_SOAP_PROBE:-false}"
 SOAP_PROBE_COMMAND="${SOAP_PROBE_COMMAND:-GET_FSUINFO}"
 ENABLE_TCPDUMP="${ENABLE_TCPDUMP:-false}"
 TCPDUMP_INTERFACE="${TCPDUMP_INTERFACE:-any}"
+ENABLE_FSU_DISCOVERY="${ENABLE_FSU_DISCOVERY:-false}"
+FSU_SCAN_CIDR="${FSU_SCAN_CIDR:-}"
+FSU_PORT_CANDIDATES="${FSU_PORT_CANDIDATES:-80,8080,8000,8081,8899}"
+FSU_SERVICE_PATH_CANDIDATES="${FSU_SERVICE_PATH_CANDIDATES:-/services/FSUService,/services/FSUService?wsdl,/FSUService,/FSUService?wsdl,/services}"
 LOG_DIR="${LOG_DIR:-/opt/fsu-tools/standalone-fsu-check/logs}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-5}"
 
-ALLOWED_PROBE_COMMANDS="GET_FSUINFO GET_LOGININFO GET_DATA"
+ALLOWED_PROBES="GET_FSUINFO GET_LOGININFO GET_DATA"
 BLOCKED_COMMANDS="SET SET_POINT SET_THRESHOLD SET_FTP SET_LOGININFO SET_FSUREBOOT REBOOT UPGRADE SCHEDULER"
 
-# ---- 全局状态 ----
+# ── 状态计数器 ──
 PASS=0; FAIL=0; SKIP=0; WARN=0
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
 RUN_LOG_DIR="${LOG_DIR}/${RUN_ID}"
 
-# ---- 辅助 ----
+# ── 配置验证状态追踪 ──
+declare -A CFG_STATUS
+CFG_STATUS[fsu_host]="unchecked"
+CFG_STATUS[fsu_port]="unchecked"
+CFG_STATUS[fsu_path]="unchecked"
+CFG_STATUS[station_name]="unchecked"
+CFG_STATUS[fsuid]="unchecked"
+declare -A CFG_DETECTED
+
+# ── 辅助函数 ──
 init_log() { mkdir -p "${RUN_LOG_DIR}"; }
 log_section() { echo ""; echo "===== $1 ====="; }
 log_i() { echo "[INFO]  $*"; }
-log_p() { echo "[PASS]  $*"; PASS=$((PASS + 1)); }
-log_f() { echo "[FAIL]  $*"; FAIL=$((FAIL + 1)); }
-log_s() { echo "[SKIP]  $*"; SKIP=$((SKIP + 1)); }
-log_w() { echo "[WARN]  $*"; WARN=$((WARN + 1)); }
+log_p() { echo "[PASS]  $*"; PASS=$((PASS+1)); }
+log_f() { echo "[FAIL]  $*"; FAIL=$((FAIL+1)); }
+log_s() { echo "[SKIP]  $*"; SKIP=$((SKIP+1)); }
+log_w() { echo "[WARN]  $*"; WARN=$((WARN+1)); }
 
-save_env() {
-    cat > "${RUN_LOG_DIR}/env.txt" <<EOF
-RUN_ID=${RUN_ID}
-FSU_HOST=${FSU_HOST}
-FSU_PORT=${FSU_PORT}
-FSU_SERVICE_PATH=${FSU_SERVICE_PATH}
-FSU_SCHEME=${FSU_SCHEME}
-STATION_NAME=${STATION_NAME}
-FSUID=${FSUID:-(not set)}
-TIMEOUT=${TIMEOUT_SECONDS}s
-SOAP_PROBE=${ENABLE_SOAP_PROBE}
-SOAP_COMMAND=${SOAP_PROBE_COMMAND}
-TCPDUMP=${ENABLE_TCPDUMP}
-HOSTNAME=$(hostname)
-USER=$(whoami)
-TIME=$(date '+%Y-%m-%d %H:%M:%S %Z')
-EOF
+mask_id() {
+    local v="$1"
+    [[ -z "$v" || ${#v} -le 6 ]] && echo "***" && return
+    echo "${v:0:4}****${v: -4}"
 }
+mask_sensitive() { echo "$1" | sed -E 's/(token|password|AUTH_TOKEN|Authorization|Cookie)=[^[:space:];]+/\1=***/gi'; }
 
-mask_sensitive() { echo "$1" | sed -E 's/(Authorization|token|password|AUTH_TOKEN)=[^ ]+/\1=***/g'; }
-
-# ---- 参数解析 ----
+# ── 参数解析 ──
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --fsu-host) FSU_HOST="$2"; shift 2 ;;
@@ -107,181 +79,298 @@ while [[ $# -gt 0 ]]; do
         --enable-soap-probe) ENABLE_SOAP_PROBE=true; shift ;;
         --soap-probe-command) SOAP_PROBE_COMMAND="$2"; shift 2 ;;
         --enable-tcpdump) ENABLE_TCPDUMP=true; shift ;;
+        --enable-fsu-discovery) ENABLE_FSU_DISCOVERY=true; shift ;;
+        --fsu-scan-cidr) FSU_SCAN_CIDR="$2"; shift 2 ;;
         --log-dir) LOG_DIR="$2"; shift 2 ;;
         --timeout) TIMEOUT_SECONDS="$2"; shift 2 ;;
-        -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
-        *) echo "未知选项: $1 (使用 -h)"; exit 2 ;;
+        -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
+        *) echo "未知: $1"; exit 2 ;;
     esac
 done
 
-# ---- auto-source env.remote ----
 [[ -f "./env.remote" ]] && { set -a; source ./env.remote; set +a; }
 
 init_log
-save_env
-
 exec 1> >(tee -a "${RUN_LOG_DIR}/summary.txt") 2>&1
 
+# ── 保存环境 ──
+cat > "${RUN_LOG_DIR}/env.txt" <<EOF
+RUN_ID=${RUN_ID}
+FSU_HOST=$(mask_id "${FSU_HOST}")
+FSU_PORT=${FSU_PORT}
+TIME=$(date)
+HOSTNAME=$(hostname)
+USER=$(whoami)
+EOF
+
 echo "============================================"
-echo " FSU 独立通信检查 (无平台依赖)"
+echo " FSU 独立通信主动验证 v2"
 echo " 运行 ID: ${RUN_ID}"
 echo " 时间: $(date '+%Y-%m-%d %H:%M:%S')"
 echo " 日志: ${RUN_LOG_DIR}"
 echo "============================================"
 
-# ===== A. 本机基础环境 =====
-log_section "A. 本机基础环境"
-{
-    echo "主机名: $(hostname)"
-    echo "用户: $(whoami)"
-    echo "时间: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-    echo "系统: $(lsb_release -ds 2>/dev/null || cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"' || echo unknown)"
-    echo "内核: $(uname -r)"
-    echo "IP: $(hostname -I 2>/dev/null || ip -4 addr show 2>/dev/null | grep -oP 'inet \K[\d.]+' | head -1 || echo unknown)"
-    echo "路由: $(ip route show default 2>/dev/null | head -1 || echo none)"
-} > "${RUN_LOG_DIR}/system_check.txt"
-
-log_i "主机名: $(hostname)"
-log_i "用户: $(whoami)"
-log_i "IP: $(hostname -I 2>/dev/null | head -1)"
+# ═══════════════════════════════════════════
+# A. 本机环境
+# ═══════════════════════════════════════════
+log_section "A. 本机环境"
+cat > "${RUN_LOG_DIR}/system_check.txt" <<EOF
+HOSTNAME=$(hostname)
+USER=$(whoami)
+TIME=$(date '+%Y-%m-%d %H:%M:%S %Z')
+OS=$(lsb_release -ds 2>/dev/null || cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"' || echo unknown)
+KERNEL=$(uname -r)
+IP=$(hostname -I 2>/dev/null | head -1)
+GATEWAY=$(ip route show default 2>/dev/null | awk '{print $3; exit}')
+DNS=$(grep '^nameserver' /etc/resolv.conf 2>/dev/null | awk '{print $2}' | tr '\n' ' ')
+EOF
+log_i "主机: $(hostname)  IP: $(hostname -I 2>/dev/null | head -1)"
+log_i "网关: $(ip route show default 2>/dev/null | awk '{print $3; exit}' || echo none)"
 
 for cmd in curl nc timeout; do
-    if command -v "$cmd" &>/dev/null; then log_p "$cmd 可用"; else log_f "$cmd 不可用 — apt install $cmd"; fi
+    command -v "$cmd" &>/dev/null && log_p "$cmd" || log_f "$cmd 缺失"
 done
 for cmd in tcpdump openssl xmllint; do
-    command -v "$cmd" &>/dev/null && log_p "$cmd 可用 (可选)" || log_s "$cmd 不可用 (非强制)"
+    command -v "$cmd" &>/dev/null && log_p "$cmd (可选)" || log_s "$cmd 未安装"
 done
 
-# ===== B. FSU 参数检查 =====
-log_section "B. FSU 参数检查"
-FSU_URL="${FSU_SCHEME}://${FSU_HOST}:${FSU_PORT}${FSU_SERVICE_PATH}"
+# ═══════════════════════════════════════════
+# B. FSU_HOST 验证
+# ═══════════════════════════════════════════
+log_section "B. FSU_HOST 验证"
+
+VERIFIED_FSU_HOST=""
+TCP_VERIFIED=false
+
+cat > "${RUN_LOG_DIR}/discovery.txt" <<EOF
+=== FSU Discovery ===
+EOF
 
 if [[ -z "${FSU_HOST}" ]]; then
-    log_f "FSU_HOST 未设置 — 请配置环境变量: export FSU_HOST=192.168.x.x"
-    echo "FSU_HOST=未设置" > "${RUN_LOG_DIR}/fsu_network_check.txt"
-else
-    log_p "FSU_HOST=${FSU_HOST}"
-    log_i "FSU_PORT=${FSU_PORT}"
-    log_i "FSU_URL=${FSU_URL}"
-fi
-
-# ===== C. DNS/IP 解析 =====
-if [[ -n "${FSU_HOST}" ]]; then
-log_section "C. DNS/IP 解析"
-{
-    echo "目标: ${FSU_HOST}"
-} > "${RUN_LOG_DIR}/fsu_network_check.txt"
-
-if [[ "${FSU_HOST}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    log_p "FSU_HOST 是 IP 地址，跳过 DNS"
-else
-    if host "${FSU_HOST}" &>/dev/null || getent hosts "${FSU_HOST}" &>/dev/null; then
-        log_p "FSU ${FSU_HOST} DNS 解析成功"
+    log_i "FSU_HOST 未设置"
+    if [[ "${ENABLE_FSU_DISCOVERY}" == "true" ]] && [[ -n "${FSU_SCAN_CIDR}" ]]; then
+        log_i "discovery 模式: 扫描 ${FSU_SCAN_CIDR} (仅 TCP ${FSU_PORT})"
+        log_w "discovery 会尝试连接网段内所有 IP 的端口 ${FSU_PORT}"
+        # 简单扫描: 取 /24 网段前 254 个 IP, 用 nc 探测
+        NETWORK=$(echo "${FSU_SCAN_CIDR}" | sed 's|\.0/24||')
+        found_count=0
+        for i in $(seq 1 254); do
+            ip="${NETWORK}.${i}"
+            if nc -z -w 1 "${ip}" "${FSU_PORT}" 2>/dev/null; then
+                log_p "发现候选 FSU: ${ip}:${FSU_PORT}"
+                echo "CANDIDATE ${ip}:${FSU_PORT}" >> "${RUN_LOG_DIR}/discovery.txt"
+                found_count=$((found_count+1))
+                [[ -z "${VERIFIED_FSU_HOST}" ]] && VERIFIED_FSU_HOST="${ip}"
+            fi
+        done
+        if [[ "${found_count}" -eq 0 ]]; then
+            log_f "discovery 未发现任何 ${FSU_PORT} 端口开放的 IP"
+            CFG_STATUS[fsu_host]="unreachable"
+        else
+            log_i "discovery 发现 ${found_count} 个候选 IP, 使用首个: ${VERIFIED_FSU_HOST}"
+            CFG_STATUS[fsu_host]="verified"
+            CFG_DETECTED[fsu_host]="${VERIFIED_FSU_HOST}"
+            TCP_VERIFIED=true
+        fi
     else
-        log_f "FSU ${FSU_HOST} DNS 解析失败 — 检查 /etc/hosts 或 DNS"
+        log_f "FSU_HOST 缺失 — 设置 FSU_HOST=192.168.x.x 或 ENABLE_FSU_DISCOVERY=true FSU_SCAN_CIDR=x.x.x.0/24"
+        CFG_STATUS[fsu_host]="unreachable"
+    fi
+else
+    log_i "user_supplied FSU_HOST=${FSU_HOST}"
+
+    # DNS/IP 检查
+    if [[ "${FSU_HOST}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        log_p "FSU_HOST 是 IP, 跳过 DNS"
+    elif host "${FSU_HOST}" &>/dev/null || getent hosts "${FSU_HOST}" &>/dev/null; then
+        log_p "DNS 解析成功: $(getent hosts "${FSU_HOST}" | awk '{print $1; exit}')"
+    else
+        log_f "DNS 解析失败: ${FSU_HOST}"
+        CFG_STATUS[fsu_host]="unreachable"
+    fi
+
+    # TCP 验证
+    if nc -vz -w "${TIMEOUT_SECONDS}" "${FSU_HOST}" "${FSU_PORT}" 2>/dev/null; then
+        log_p "TCP ${FSU_HOST}:${FSU_PORT} 连通"
+        VERIFIED_FSU_HOST="${FSU_HOST}"
+        CFG_STATUS[fsu_host]="verified"
+        TCP_VERIFIED=true
+    else
+        # 候选端口探测
+        log_f "TCP ${FSU_HOST}:${FSU_PORT} 不通"
+        log_i "尝试候选端口: ${FSU_PORT_CANDIDATES}"
+        IFS=',' read -ra PORTS <<< "${FSU_PORT_CANDIDATES}"
+        detected_port=""
+        for p in "${PORTS[@]}"; do
+            p="${p// /}"
+            [[ "$p" == "${FSU_PORT}" ]] && continue
+            if nc -z -w 1 "${FSU_HOST}" "$p" 2>/dev/null; then
+                log_w "候选端口 $p 可达 (user_supplied=${FSU_PORT})"
+                detected_port="$p"
+                break
+            fi
+        done
+        if [[ -n "${detected_port}" ]]; then
+            CFG_STATUS[fsu_host]="verified"
+            CFG_STATUS[fsu_port]="mismatch"
+            CFG_DETECTED[fsu_port]="${detected_port}"
+            FSU_PORT="${detected_port}"
+            TCP_VERIFIED=true
+        else
+            CFG_STATUS[fsu_host]="unreachable"
+        fi
     fi
 fi
 
-# ===== D. TCP 连通性 =====
-log_section "D. TCP 连通性"
-TCP_OK=false
-if nc -vz -w "${TIMEOUT_SECONDS}" "${FSU_HOST}" "${FSU_PORT}" 2>>"${RUN_LOG_DIR}/fsu_network_check.txt"; then
-    echo "TCP ${FSU_HOST}:${FSU_PORT} OK" >> "${RUN_LOG_DIR}/fsu_network_check.txt"
-    log_p "TCP ${FSU_HOST}:${FSU_PORT} 连通"
-    TCP_OK=true
+# ═══════════════════════════════════════════
+# C. FSU_PORT 验证
+# ═══════════════════════════════════════════
+log_section "C. FSU_PORT 验证"
+FSU_URL="${FSU_SCHEME}://${VERIFIED_FSU_HOST:-${FSU_HOST}}:${FSU_PORT}${FSU_SERVICE_PATH}"
+
+if [[ "${TCP_VERIFIED}" != "true" ]]; then
+    log_s "TCP 不通, FSU_PORT 无法验证"
+    CFG_STATUS[fsu_port]="${CFG_STATUS[fsu_port]:-unreachable}"
 else
-    echo "TCP ${FSU_HOST}:${FSU_PORT} FAIL" >> "${RUN_LOG_DIR}/fsu_network_check.txt"
-    log_f "TCP ${FSU_HOST}:${FSU_PORT} 不通 — 检查: FSU是否在线? 路由/VPN/防火墙? 端口是否正确?"
+    if [[ "${CFG_STATUS[fsu_port]}" == "mismatch" ]]; then
+        log_w "FSU_PORT mismatch: user=${FSU_PORT_CANDIDATES%%:*}, detected=${FSU_PORT}"
+    else
+        log_p "FSU_PORT=${FSU_PORT} TCP verified"
+        CFG_STATUS[fsu_port]="verified"
+    fi
 fi
 
-# ===== E. HTTP/SOAP 路径探测 =====
-log_section "E. HTTP/SOAP 路径探测"
-{
-    echo "=== HTTP 探测 ==="
-    echo "URL: ${FSU_URL}"
-} > "${RUN_LOG_DIR}/http_probe.txt"
+# ═══════════════════════════════════════════
+# D. FSU_SERVICE_PATH 验证
+# ═══════════════════════════════════════════
+log_section "D. FSU_SERVICE_PATH 验证"
+cat > "${RUN_LOG_DIR}/endpoint_candidates.txt" <<EOF
+=== Endpoint Candidates ===
+user_supplied: ${FSU_SERVICE_PATH}
+EOF
 
-if [[ "${TCP_OK}" != "true" ]]; then
-    log_s "TCP 不通，跳过 HTTP 探测"
+PATH_VERIFIED=false
+VERIFIED_PATH=""
+
+if [[ "${TCP_VERIFIED}" != "true" ]]; then
+    log_s "TCP 不通, 跳过路径验证"
+    CFG_STATUS[fsu_path]="unreachable"
 else
-    # HEAD
-    H_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time "${TIMEOUT_SECONDS}" \
-        -X HEAD "${FSU_URL}" 2>/dev/null || echo "000")
-    echo "HEAD → ${H_CODE}" >> "${RUN_LOG_DIR}/http_probe.txt"
-    case "${H_CODE}" in
-        200) log_p "FSU HTTP HEAD 返回 200" ;;
-        405) log_w "FSU HTTP HEAD 返回 405 — gSOAP 可能只接受 POST，非故障" ;;
-        404) log_w "FSU HTTP HEAD 返回 404 — 路径可能不对: ${FSU_SERVICE_PATH}" ;;
-        000) log_w "FSU HTTP HEAD 无响应 — gSOAP 可能不接受 HEAD" ;;
-        *)   log_w "FSU HTTP HEAD 返回 ${H_CODE}" ;;
-    esac
+    IFS=',' read -ra PATHS <<< "${FSU_SERVICE_PATH_CANDIDATES}"
+    for path in "${PATHS[@]}"; do
+        path="${path// /}"
+        test_url="${FSU_SCHEME}://${VERIFIED_FSU_HOST:-${FSU_HOST}}:${FSU_PORT}${path}"
+        echo "  testing: ${test_url}" >> "${RUN_LOG_DIR}/endpoint_candidates.txt"
 
-    # GET
-    G_CODE=$(curl -s -o /tmp/fsu_get_${RUN_ID}.txt -w "%{http_code}" --max-time "${TIMEOUT_SECONDS}" \
-        -X GET "${FSU_URL}" 2>/dev/null || echo "000")
-    echo "GET → ${G_CODE}" >> "${RUN_LOG_DIR}/http_probe.txt"
-    cat /tmp/fsu_get_${RUN_ID}.txt >> "${RUN_LOG_DIR}/http_probe.txt" 2>/dev/null || true
-    case "${G_CODE}" in
-        200) log_p "FSU HTTP GET 返回 200" ;;
-        405) log_w "FSU HTTP GET 返回 405 — gSOAP 可能只接受 POST" ;;
-        404) log_w "FSU HTTP GET 返回 404 — 路径可能不对" ;;
-        000) log_w "FSU HTTP GET 无响应" ;;
-        *)   log_w "FSU HTTP GET 返回 ${G_CODE}" ;;
-    esac
-    rm -f /tmp/fsu_get_${RUN_ID}.txt
+        # POST 最小 SOAP
+        code=$(curl -s -o /tmp/fsu_path_${RUN_ID}.txt -w "%{http_code}" --max-time "${TIMEOUT_SECONDS}" \
+            -X POST -H "Content-Type: text/xml; charset=utf-8" -H "SOAPAction: \"\"" \
+            -d '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body/></soap:Envelope>' \
+            "${test_url}" 2>/dev/null || echo "000")
+        resp=$(cat /tmp/fsu_path_${RUN_ID}.txt 2>/dev/null || echo "")
+        echo "  POST → ${code}" >> "${RUN_LOG_DIR}/endpoint_candidates.txt"
 
-    # POST 最小 SOAP 探测
-    P_CODE=$(curl -s -o /tmp/fsu_post_${RUN_ID}.txt -w "%{http_code}" --max-time "${TIMEOUT_SECONDS}" \
+        if [[ "${code}" == "200" ]]; then
+            if echo "${resp}" | grep -qi "Envelope\|soap\|SOAP\|wsdl\|definitions"; then
+                log_p "路径 ${path} 返回 HTTP 200 + SOAP/WSDL → verified"
+                VERIFIED_PATH="${path}"
+                PATH_VERIFIED=true
+                break
+            else
+                log_w "路径 ${path} 返回 HTTP 200 但非 SOAP"
+            fi
+        elif [[ "${code}" == "500" ]] && echo "${resp}" | grep -qi "Envelope\|soap\|Fault"; then
+            log_w "路径 ${path} 返回 HTTP 500 + SOAP Fault → probable endpoint"
+            if [[ "${PATH_VERIFIED}" != "true" ]]; then
+                VERIFIED_PATH="${path}"
+                PATH_VERIFIED=true
+            fi
+            break
+        elif [[ "${code}" == "405" ]]; then
+            log_i "路径 ${path} 返回 405 — 方法不支持"
+        fi
+    done
+    rm -f /tmp/fsu_path_${RUN_ID}.txt
+
+    if [[ "${PATH_VERIFIED}" == "true" ]]; then
+        FSU_SERVICE_PATH="${VERIFIED_PATH}"
+        FSU_URL="${FSU_SCHEME}://${VERIFIED_FSU_HOST:-${FSU_HOST}}:${FSU_PORT}${FSU_SERVICE_PATH}"
+        if [[ "${VERIFIED_PATH}" != "${FSU_SERVICE_PATH_CANDIDATES%%,*}" ]]; then
+            CFG_STATUS[fsu_path]="mismatch"
+            CFG_DETECTED[fsu_path]="${VERIFIED_PATH}"
+            log_w "PATH mismatch: user_supplied=${FSU_SERVICE_PATH_CANDIDATES%%,*}, detected=${VERIFIED_PATH}"
+        else
+            CFG_STATUS[fsu_path]="verified"
+            log_p "FSU_SERVICE_PATH=${FSU_SERVICE_PATH} verified"
+        fi
+    else
+        log_w "无法确认 SOAP 端点路径, 保留 user_supplied=${FSU_SERVICE_PATH}"
+        CFG_STATUS[fsu_path]="unknown"
+    fi
+fi
+
+# ═══════════════════════════════════════════
+# E. HTTP/SOAP 连通性 (使用最终 URL)
+# ═══════════════════════════════════════════
+log_section "E. HTTP/SOAP 连通性"
+cat > "${RUN_LOG_DIR}/http_probe.txt" <<EOF
+=== HTTP Probe ===
+URL: ${FSU_URL}
+EOF
+
+if [[ "${TCP_VERIFIED}" != "true" ]]; then
+    log_s "TCP 不通, 跳过 HTTP 探测"
+else
+    P_CODE=$(curl -s -o /tmp/fsu_hp_${RUN_ID}.txt -w "%{http_code}" --max-time "${TIMEOUT_SECONDS}" \
         -X POST -H "Content-Type: text/xml; charset=utf-8" -H "SOAPAction: \"\"" \
         -d '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body/></soap:Envelope>' \
         "${FSU_URL}" 2>/dev/null || echo "000")
+    RESP=$(cat /tmp/fsu_hp_${RUN_ID}.txt 2>/dev/null || "")
     echo "POST → ${P_CODE}" >> "${RUN_LOG_DIR}/http_probe.txt"
-    cat /tmp/fsu_post_${RUN_ID}.txt >> "${RUN_LOG_DIR}/http_probe.txt" 2>/dev/null || true
+    echo "${RESP}" >> "${RUN_LOG_DIR}/http_probe.txt"
+    rm -f /tmp/fsu_hp_${RUN_ID}.txt
 
     if [[ "${P_CODE}" == "200" ]]; then
-        RESP=$(cat /tmp/fsu_post_${RUN_ID}.txt 2>/dev/null || "")
-        if echo "${RESP}" | grep -qi "Envelope\|soap\|SOAP"; then
-            log_p "FSU HTTP POST 返回 200 + SOAP 响应 — FSUService 可达"
-        else
-            log_p "FSU HTTP POST 返回 200 — 响应非 SOAP，需人工确认"
-        fi
+        log_p "HTTP POST 200 — ${FSU_URL}"
+        echo "${RESP}" | grep -qi "Envelope\|soap\|SOAP" && log_p "响应含 SOAP Envelope" || log_w "响应非 SOAP"
     elif [[ "${P_CODE}" == "500" ]]; then
-        log_w "FSU HTTP POST 返回 500 — 可能是 gSOAP 收到无效 SOAP Body 的正常响应"
+        log_w "HTTP POST 500 — gSOAP 可能在线, 响应无效 Body"
     elif [[ "${P_CODE}" == "000" ]]; then
-        log_f "FSU HTTP POST 无响应 — 请检查: FSU gSOAP 是否运行? 路径: ${FSU_SERVICE_PATH}?"
+        log_f "HTTP POST 无响应 — FSU gSOAP 未运行?"
     else
-        log_w "FSU HTTP POST 返回 ${P_CODE}"
+        log_w "HTTP POST ${P_CODE}"
     fi
-    rm -f /tmp/fsu_post_${RUN_ID}.txt
 fi
-fi  # FSU_HOST check
 
-# ===== F. 只读 SOAP 探测 (可选) =====
-log_section "F. 只读 SOAP 探测"
-{
-    echo "=== SOAP 探测 ==="
-    echo "ENABLE_SOAP_PROBE=${ENABLE_SOAP_PROBE}"
-    echo "SOAP_PROBE_COMMAND=${SOAP_PROBE_COMMAND}"
-} > "${RUN_LOG_DIR}/soap_probe.txt"
+# ═══════════════════════════════════════════
+# F. 只读 SOAP 探测 + 身份验证
+# ═══════════════════════════════════════════
+log_section "F. SOAP 探测与身份验证"
+cat > "${RUN_LOG_DIR}/identity_validation.txt" <<EOF
+=== Identity Validation ===
+STATION_NAME(user_supplied)=${STATION_NAME}
+FSUID(user_supplied)=$(mask_id "${FSUID}")
+EOF
 
 if [[ "${ENABLE_SOAP_PROBE}" != "true" ]]; then
-    log_s "ENABLE_SOAP_PROBE=false, 跳过"
+    log_s "ENABLE_SOAP_PROBE=false"
+    CFG_STATUS[station_name]="skipped"
+    CFG_STATUS[fsuid]="skipped"
 else
-    # 安全门: 拒绝非白名单命令
-    PROBE_CMD_UPPER=$(echo "${SOAP_PROBE_COMMAND}" | tr '[:lower:]' '[:upper:]')
-    if echo "${BLOCKED_COMMANDS}" | grep -qw "${PROBE_CMD_UPPER}"; then
-        log_f "SOAP_PROBE_COMMAND=${SOAP_PROBE_COMMAND} 被禁止 — 脚本不允许执行 SET 类命令"
+    PROBE_UPPER=$(echo "${SOAP_PROBE_COMMAND}" | tr '[:lower:]' '[:upper:]')
+    if echo "${BLOCKED_COMMANDS}" | grep -qw "${PROBE_UPPER}"; then
+        log_f "SOAP_PROBE_COMMAND=${SOAP_PROBE_COMMAND} 被禁止 — 拒绝执行"
         echo "BLOCKED: ${SOAP_PROBE_COMMAND}" >> "${RUN_LOG_DIR}/soap_probe.txt"
-    elif ! echo "${ALLOWED_PROBE_COMMANDS}" | grep -qw "${PROBE_CMD_UPPER}"; then
-        log_f "SOAP_PROBE_COMMAND=${SOAP_PROBE_COMMAND} 不在白名单 — 仅允许: ${ALLOWED_PROBE_COMMANDS}"
+    elif ! echo "${ALLOWED_PROBES}" | grep -qw "${PROBE_UPPER}"; then
+        log_f "SOAP_PROBE_COMMAND=${SOAP_PROBE_COMMAND} 不在白名单 (${ALLOWED_PROBES})"
         echo "UNKNOWN: ${SOAP_PROBE_COMMAND}" >> "${RUN_LOG_DIR}/soap_probe.txt"
-    elif [[ "${TCP_OK}" != "true" ]]; then
-        log_s "TCP 不通，跳过 SOAP 探测"
+    elif [[ "${TCP_VERIFIED}" != "true" ]]; then
+        log_s "TCP 不通, 跳过 SOAP"
     else
         FSU_CODE="${FSUID:-}"
         STATION="${STATION_NAME:-1}"
 
-        case "${PROBE_CMD_UPPER}" in
+        case "${PROBE_UPPER}" in
             GET_FSUINFO)
                 MSG_TYPE="1701"
                 REQ_BODY='<?xml version="1.0" encoding="UTF-8"?>
@@ -305,9 +394,7 @@ else
             GET_LOGININFO)
                 MSG_TYPE="1501"
                 REQ_BODY='<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <ns1:invoke xmlns:ns1="http://service.fsu.binterface.dcim.com">
       <xmlData>&lt;PK_Type&gt;
@@ -325,9 +412,7 @@ else
             GET_DATA)
                 MSG_TYPE="401"
                 REQ_BODY='<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <ns1:invoke xmlns:ns1="http://service.fsu.binterface.dcim.com">
       <xmlData>&lt;PK_Type&gt;
@@ -342,84 +427,161 @@ else
                 ;;
         esac
 
-        # 脱敏写请求日志
         echo "${REQ_BODY}" > "${RUN_LOG_DIR}/soap_request.xml"
 
         log_i "发送 ${SOAP_PROBE_COMMAND} (Code=${MSG_TYPE}) → ${FSU_URL}"
-        PROBE_CODE=$(curl -s -o "${RUN_LOG_DIR}/soap_response.xml" -w "%{http_code}" \
+        PCODE=$(curl -s -o "${RUN_LOG_DIR}/soap_response.xml" -w "%{http_code}" \
             --max-time "$((TIMEOUT_SECONDS * 3))" \
             -X POST -H "Content-Type: text/xml; charset=utf-8" -H "SOAPAction: \"\"" \
             -d "${REQ_BODY}" "${FSU_URL}" 2>/dev/null || echo "000")
+        PRESP=$(cat "${RUN_LOG_DIR}/soap_response.xml" 2>/dev/null || echo "")
 
-        echo "HTTP ${PROBE_CODE}" >> "${RUN_LOG_DIR}/soap_probe.txt"
+        {
+            echo "=== SOAP Probe ==="
+            echo "command=${SOAP_PROBE_COMMAND}"
+            echo "code=${MSG_TYPE}"
+            echo "http_status=${PCODE}"
+            echo "--- response (first 2000 chars, masked) ---"
+            echo "${PRESP}" | head -c 2000
+        } > "${RUN_LOG_DIR}/soap_probe.txt"
 
-        if [[ "${PROBE_CODE}" == "200" ]]; then
-            RESP=$(cat "${RUN_LOG_DIR}/soap_response.xml" 2>/dev/null || "")
-            echo "${RESP}" >> "${RUN_LOG_DIR}/soap_probe.txt"
+        # 分层分析
+        HAS_ENV=0; HAS_ACK=0; HAS_RESULT=0; HAS_STATION=0; HAS_FSUID_RESP=0
+        DETECTED_STATION=""; DETECTED_FSUID=""
 
-            HAS_ENV=$(echo "${RESP}" | grep -ci "Envelope" || true)
-            HAS_ACK=$(echo "${RESP}" | grep -ci "ACK\|${MSG_TYPE}" || true)
-            HAS_RESULT=$(echo "${RESP}" | grep -ci "Result\|ResultCode\|Code" || true)
+        echo "${PRESP}" | grep -qi "Envelope" && HAS_ENV=1
+        echo "${PRESP}" | grep -qi "ACK\|${MSG_TYPE}" && HAS_ACK=1
+        echo "${PRESP}" | grep -qi "Result\|ResultCode\|Code" && HAS_RESULT=1
 
-            log_p "SOAP 探测 HTTP 200"
-            [[ "${HAS_ENV}" -gt 0 ]] && log_p "响应包含 SOAP Envelope" || log_w "响应不含 Envelope — 可能不是 SOAP"
-            [[ "${HAS_ACK}" -gt 0 ]] && log_p "响应包含 ACK/Code=${MSG_TYPE}" || log_w "响应不包含预期 ACK 码 ${MSG_TYPE}"
-            [[ "${HAS_RESULT}" -gt 0 ]] && log_i "响应包含 Result/ResultCode — 协议层有返回"
-        elif [[ "${PROBE_CODE}" == "500" ]]; then
-            log_w "SOAP 探测 HTTP 500 — 可能是 FSU 收到无效请求, 检查 FSUID/StationName 是否正确"
-        elif [[ "${PROBE_CODE}" == "000" ]]; then
-            log_f "SOAP 探测无响应 — FSU TCP 通但 SOAP 不可达"
+        # 提取 StationName
+        STATION_MATCH=$(echo "${PRESP}" | grep -oiP 'StationName[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -z "${STATION_MATCH}" ]] && STATION_MATCH=$(echo "${PRESP}" | grep -oiP 'StationID[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -n "${STATION_MATCH}" ]] && HAS_STATION=1 && DETECTED_STATION="${STATION_MATCH}"
+
+        # 提取 FSUID
+        FSUID_MATCH=$(echo "${PRESP}" | grep -oiP 'FSUId[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -z "${FSUID_MATCH}" ]] && FSUID_MATCH=$(echo "${PRESP}" | grep -oiP 'FSUID[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -z "${FSUID_MATCH}" ]] && FSUID_MATCH=$(echo "${PRESP}" | grep -oiP 'FsuCode[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -z "${FSUID_MATCH}" ]] && FSUID_MATCH=$(echo "${PRESP}" | grep -oiP 'SUId[^<]*<[^>]*>\K[^<]+' | head -1 || true)
+        [[ -n "${FSUID_MATCH}" ]] && HAS_FSUID_RESP=1 && DETECTED_FSUID="${FSUID_MATCH}"
+
+        # 网络层
+        [[ "${PCODE}" == "200" ]] && log_p "network: HTTP 200" || log_f "network: HTTP ${PCODE}"
+        # SOAP 层
+        [[ "${HAS_ENV}" -eq 1 ]] && log_p "soap: Envelope detected" || log_w "soap: no Envelope"
+        # B接口层
+        [[ "${HAS_ACK}" -eq 1 ]] && log_p "binterface: ACK/${MSG_TYPE}" || log_w "binterface: no ACK"
+
+        # 身份验证
+        {
+            echo "network: $([[ "${PCODE}" == "200" ]] && echo ok || echo failed)"
+            echo "soap: $([[ "${HAS_ENV}" -eq 1 ]] && echo envelope_detected || echo no_envelope)"
+            echo "binterface: $([[ "${HAS_ACK}" -eq 1 ]] && echo ack_detected || echo no_ack)"
+        } >> "${RUN_LOG_DIR}/identity_validation.txt"
+
+        # STATION_NAME
+        if [[ "${HAS_STATION}" -eq 1 ]]; then
+            if [[ "${DETECTED_STATION}" == "${STATION_NAME}" ]]; then
+                log_p "identity: StationName verified (${DETECTED_STATION})"
+                CFG_STATUS[station_name]="verified"
+            else
+                log_w "identity: StationName mismatch (user=${STATION_NAME}, fsu=${DETECTED_STATION})"
+                CFG_STATUS[station_name]="mismatch"
+                CFG_DETECTED[station_name]="${DETECTED_STATION}"
+            fi
         else
-            log_f "SOAP 探测 HTTP ${PROBE_CODE}"
+            log_i "identity: StationName unknown (SOAP 响应不含此字段)"
+            CFG_STATUS[station_name]="unknown"
         fi
 
-        echo "" >> "${RUN_LOG_DIR}/soap_probe.txt"
-        echo "目标: ${FSU_URL}" >> "${RUN_LOG_DIR}/soap_probe.txt"
-        echo "命令: ${SOAP_PROBE_COMMAND} (Code=${MSG_TYPE})" >> "${RUN_LOG_DIR}/soap_probe.txt"
-        echo "HTTP: ${PROBE_CODE}" >> "${RUN_LOG_DIR}/soap_probe.txt"
+        # FSUID
+        if [[ "${HAS_FSUID_RESP}" -eq 1 ]]; then
+            if [[ -z "${FSUID}" ]]; then
+                log_p "identity: FSUID auto_detected=$(mask_id "${DETECTED_FSUID}")"
+                CFG_STATUS[fsuid]="auto_detected"
+                CFG_DETECTED[fsuid]="${DETECTED_FSUID}"
+            elif [[ "${DETECTED_FSUID}" == "${FSUID}" ]]; then
+                log_p "identity: FSUID verified"
+                CFG_STATUS[fsuid]="verified"
+            else
+                log_w "identity: FSUID mismatch (user=$(mask_id "${FSUID}"), fsu=$(mask_id "${DETECTED_FSUID}"))"
+                CFG_STATUS[fsuid]="mismatch"
+                CFG_DETECTED[fsuid]="${DETECTED_FSUID}"
+            fi
+        elif [[ -z "${FSUID}" ]]; then
+            log_i "identity: FSUID unknown (SOAP 响应不含识别字段)"
+            CFG_STATUS[fsuid]="unknown"
+        else
+            log_i "identity: FSUID user_supplied=$(mask_id "${FSUID}"), 无法从响应验证"
+            CFG_STATUS[fsuid]="unverified"
+        fi
     fi
 fi
 
-# ===== G. tcpdump =====
+# ═══════════════════════════════════════════
+# G. tcpdump
+# ═══════════════════════════════════════════
 log_section "G. tcpdump"
 if [[ "${ENABLE_TCPDUMP}" != "true" ]]; then
     log_s "ENABLE_TCPDUMP=false"
-elif [[ -z "${FSU_HOST}" ]]; then
-    log_s "FSU_HOST 未设置"
+elif [[ -z "${VERIFIED_FSU_HOST}" ]]; then
+    log_s "无可用 FSU IP, 跳过"
 elif ! command -v tcpdump &>/dev/null; then
-    log_s "tcpdump 不可用 — apt install tcpdump"
+    log_s "tcpdump 未安装"
 else
     PCAP="${RUN_LOG_DIR}/tcpdump.pcap"
-    if [[ "$(id -u)" -eq 0 ]] || sudo -n true 2>/dev/null; then
-        log_i "抓包 10s: host ${FSU_HOST} port ${FSU_PORT}"
-        timeout 12 tcpdump -i "${TCPDUMP_INTERFACE}" "host ${FSU_HOST} and port ${FSU_PORT}" \
-            -w "${PCAP}" -c 200 2>/dev/null || true
-        [[ -s "${PCAP}" ]] && log_p "抓包完成: ${PCAP}" || log_w "未捕获到数据包"
+    if timeout 12 tcpdump -i "${TCPDUMP_INTERFACE}" "host ${VERIFIED_FSU_HOST}" \
+        -w "${PCAP}" -c 200 2>/dev/null || true; then
+        [[ -s "${PCAP}" ]] && log_p "tcpdump: ${PCAP} ($(wc -c < "${PCAP}") bytes)" || log_w "tcpdump: 无数据包"
     else
-        log_s "无 sudo 权限 — 手动: sudo tcpdump -i any host ${FSU_HOST} -w ${PCAP}"
+        log_s "tcpdump 需要 root 权限 — sudo $0"
     fi
 fi
 
-# ===== 汇总 =====
+# ═══════════════════════════════════════════
+# 配置验证摘要
+# ═══════════════════════════════════════════
+log_section "配置验证摘要"
+{
+    echo "=== Config Validation ==="
+    echo "FSU_HOST        user_supplied=${FSU_HOST} status=${CFG_STATUS[fsu_host]} detected=${CFG_DETECTED[fsu_host]:-}"
+    echo "FSU_PORT        user_supplied=${FSU_PORT_CANDIDATES%%,*} status=${CFG_STATUS[fsu_port]} detected=${CFG_DETECTED[fsu_port]:-}"
+    echo "FSU_PATH        user_supplied=${FSU_SERVICE_PATH_CANDIDATES%%,*} status=${CFG_STATUS[fsu_path]} detected=${CFG_DETECTED[fsu_path]:-}"
+    echo "STATION_NAME    user_supplied=${STATION_NAME} status=${CFG_STATUS[station_name]} detected=${CFG_DETECTED[station_name]:-}"
+    echo "FSUID           user_supplied=$(mask_id "${FSUID}") status=${CFG_STATUS[fsuid]} detected=$(mask_id "${CFG_DETECTED[fsuid]:-}")"
+} | tee "${RUN_LOG_DIR}/config_validation.txt"
+
+echo ""
+for key in fsu_host fsu_port fsu_path station_name fsuid; do
+    status="${CFG_STATUS[${key}]}"
+    case "${status}" in
+        verified)    icon="[OK]" ;;
+        auto_detected) icon="[DET]" ;;
+        mismatch)    icon="[MIS]" ;;
+        unknown|unverified) icon="[???]" ;;
+        skipped)     icon="[SKP]" ;;
+        *)           icon="[FAIL]" ;;
+    esac
+    echo "  ${icon} ${key}: ${status}"
+done
+
+# ═══════════════════════════════════════════
+# 汇总
+# ═══════════════════════════════════════════
 log_section "汇总"
-TOTAL=$((PASS + FAIL + SKIP + WARN))
+TOTAL=$((PASS+FAIL+SKIP+WARN))
 echo ""
 echo "============================================"
-echo " FSU 独立通信检查完成"
+echo " FSU 独立通信主动验证完成"
 echo "============================================"
-echo " 总计: ${TOTAL} 项"
-echo " PASS: ${PASS}"
-echo " FAIL: ${FAIL}"
-echo " SKIP: ${SKIP}"
-echo " WARN: ${WARN}"
+echo " 总计: ${TOTAL}  PASS: ${PASS}  FAIL: ${FAIL}  SKIP: ${SKIP}  WARN: ${WARN}"
 echo " 日志: ${RUN_LOG_DIR}"
 echo "============================================"
 
 {
-    echo "TOTAL=${TOTAL}"
-    echo "PASS=${PASS}"; echo "FAIL=${FAIL}"
+    echo "TOTAL=${TOTAL}"; echo "PASS=${PASS}"; echo "FAIL=${FAIL}"
     echo "SKIP=${SKIP}"; echo "WARN=${WARN}"
 } >> "${RUN_LOG_DIR}/summary.txt"
 
-[[ "${FAIL}" -gt 0 ]] && { echo ""; echo "存在 ${FAIL} 项失败，检查日志: ${RUN_LOG_DIR}"; exit 1; }
+[[ "${FAIL}" -gt 0 ]] && { echo ""; echo "存在 ${FAIL} 项失败: ${RUN_LOG_DIR}"; exit 1; }
 exit 0
