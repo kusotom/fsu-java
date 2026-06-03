@@ -1,96 +1,112 @@
-# 远程 FSU 通信检查脚本
+# 远程 FSU 通信检查 — 部署与运维文档
 
-**文件**: `scripts/fusu-remote-comm-check.sh`
+## 文件清单
 
-## 用途
-
-部署到远程服务器后，一键检查：
-- 平台服务本地端口是否启动
-- `/services/SCService` 被动上报入口是否可访问
-- 远程服务器是否能连通 FSU 的 `/services/FSUService`
-- 可选执行只读 B接口命令 (GET_FSUINFO)
-- 可选 tcpdump 抓包辅助排查
+| 文件 | 用途 |
+|------|------|
+| `scripts/fsu-clean-server-bootstrap.sh` | 干净服务器初始化 (安装依赖 + 创建目录) |
+| `scripts/fsu-remote-comm-check.sh` | 主测试脚本 |
+| `scripts/fsu-remote-comm-check.env.example` | 配置模板 |
 
 ## 安全声明
 
-- **不执行** SET/SET_*/控制类命令
+- **不执行** SET / SET_* / 控制类命令
 - **不启动** Scheduler
 - **不修改** 业务数据库
 - 不硬编码真实 FSU 密码/token/FSUID
+- `env.remote` 不提交 git
 
-## 前置条件
+---
 
-- Ubuntu/Debian 服务器
-- `curl`, `nc`, `timeout` 已安装
-- `tcpdump` 用于抓包 (可选)
+## 干净服务器完整部署流程
 
-```bash
-sudo apt install curl netcat-openbsd tcpdump -y
-```
-
-## 运行命令
-
-### 最小: 仅检查平台本地服务
+### 1. 本地: 上传 bootstrap 脚本
 
 ```bash
-./scripts/fusu-remote-comm-check.sh
+cd /home/tom/桌面/FSU/fsu-platform-java
+REMOTE_USER=youruser
+REMOTE_HOST=your-server-ip
+
+scp scripts/fsu-clean-server-bootstrap.sh ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
 ```
 
-### 检查 FSU 连通性
+### 2. 远程: 执行初始化
 
 ```bash
-FSU_HOST=192.168.x.x FSU_PORT=80 ./scripts/fusu-remote-comm-check.sh
+ssh ${REMOTE_USER}@${REMOTE_HOST} \
+  "chmod +x /tmp/fsu-clean-server-bootstrap.sh && sudo /tmp/fsu-clean-server-bootstrap.sh"
 ```
 
-### 带真实 FSUID 的完整检查
+可选: 安装 tcpdump 和 Java
 
 ```bash
-FSU_HOST=192.168.x.x \
-FSU_PORT=80 \
-STATION_NAME=1 \
-FSUID=51051243812345 \
-./scripts/fusu-remote-comm-check.sh
+ssh ${REMOTE_USER}@${REMOTE_HOST} \
+  "sudo INSTALL_TCPDUMP=true INSTALL_JAVA=true /tmp/fsu-clean-server-bootstrap.sh"
 ```
 
-### 开启只读协议探测
+### 3. 本地: 上传测试脚本和配置
 
 ```bash
-FSU_HOST=192.168.x.x \
-FSU_PORT=80 \
-FSUID=51051243812345 \
-ENABLE_PROTOCOL_PROBE=true \
-./scripts/fusu-remote-comm-check.sh
+REMOTE_DIR=/opt/fsu-tools/remote-comm-check
+
+scp scripts/fsu-remote-comm-check.sh ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/
+scp scripts/fsu-remote-comm-check.env.example ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/env.example
 ```
 
-### 开启抓包
+### 4. 远程: 授权
 
 ```bash
-sudo FSU_HOST=192.168.x.x \
-FSU_PORT=80 \
-ENABLE_TCPDUMP=true \
-TCPDUMP_INTERFACE=any \
-./scripts/fusu-remote-comm-check.sh
+ssh ${REMOTE_USER}@${REMOTE_HOST} "chmod +x ${REMOTE_DIR}/fsu-remote-comm-check.sh"
 ```
 
-## 结果判断
+### 5. 远程: 创建真实配置
 
-| 输出 | 含义 |
-|------|------|
-| `[PASS]` | 检查通过 |
-| `[FAIL]` | 检查失败, 需排查 |
-| `[SKIP]` | 因配置跳过 |
-| 退出码 0 | 全部通过或跳过 |
-| 退出码 1 | 存在失败项 |
+```bash
+ssh ${REMOTE_USER}@${REMOTE_HOST}
+cd /opt/fsu-tools/remote-comm-check
+cp env.example env.remote
+nano env.remote   # 修改 FSU_HOST, FSUID 等字段
+```
+
+### 6. 远程: 首次运行 (仅平台检查)
+
+```bash
+cd /opt/fsu-tools/remote-comm-check
+set -a && source ./env.remote && set +a
+./fsu-remote-comm-check.sh
+```
+
+### 7. 远程: 开启 FSU 只读协议探测
+
+```bash
+ENABLE_PROTOCOL_PROBE=true ./fsu-remote-comm-check.sh
+```
+
+### 8. 远程: 开启 tcpdump 抓包
+
+```bash
+sudo ENABLE_TCPDUMP=true ./fsu-remote-comm-check.sh
+```
+
+---
+
+## 检查项
+
+| 分类 | 检查内容 |
+|------|---------|
+| A. 系统环境 | 用户/主机名/系统版本/IP/路由/DNS/工具链 |
+| B. 平台服务 | 127.0.0.1:8080 TCP, HTTP, SCService POST, actuator/health |
+| C. FSU 网络 | DNS 解析, TCP 端口, HTTP/SOAP POST 可达性 |
+| D. 协议探测 | GET_FSUINFO (Code=1701) 轻量 SOAP POST (需 --enable-protocol-probe) |
+| E. tcpdump | 短时抓包 (需 --enable-tcpdump + sudo) |
 
 ## 常见失败原因
 
-| 现象 | 可能原因 |
-|------|---------|
-| 平台端口 TCP 不通 | 平台未启动, 8080 端口未放行 |
-| FSU IP 不通 | 路由/VPN/防火墙问题 |
-| FSU TCP 不通 | FSU 离线, 端口错误 |
-| FSU POST 无响应 | FSU gSOAP 未运行, 路径不对 |
-| FSU POST 返回 200 但无 SOAP | FSUService 不是 SOAP 端点 |
-| GET_FSUINFO 无响应 | FSU 不支持 B接口2016, Code=1701 |
-| StationName/FSUID 不匹配 | 检查 FSU 配置文件中的实际值 |
-| tcpdump 无权限 | 使用 `sudo` 或手动执行 |
+| 现象 | 原因 |
+|------|------|
+| 平台 TCP 不通 | 平台未启动 / 端口未放行 |
+| FSU IP 不通 | 路由/VPN/防火墙 |
+| FSU POST 无响应 | FSU gSOAP 未运行 |
+| GET_FSUINFO 无响应 | 不支持 B接口2016 |
+| StationName/FSUID 不匹配 | 检查 FSU 配置 |
+| tcpdump 无权限 | 使用 sudo |

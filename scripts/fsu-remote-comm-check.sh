@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# fusu-remote-comm-check.sh — FSU 远程通信检查脚本
+# fsu-remote-comm-check.sh — FSU 远程通信检查脚本
 # ============================================================================
 # 用途: 部署到远程服务器后，一键检查平台服务器与现场 FSU 的网络、HTTP/SOAP、
 #       B接口只读命令通信是否正常。
@@ -47,6 +47,7 @@ STATION_NAME="${STATION_NAME:-1}"
 FSUID="${FSUID:-}"
 AUTH_TOKEN="${AUTH_TOKEN:-}"
 ENABLE_PROTOCOL_PROBE="${ENABLE_PROTOCOL_PROBE:-false}"
+ENABLE_LOCAL_SC_MOCK="${ENABLE_LOCAL_SC_MOCK:-false}"
 ENABLE_TCPDUMP="${ENABLE_TCPDUMP:-false}"
 TCPDUMP_INTERFACE="${TCPDUMP_INTERFACE:-any}"
 LOG_DIR="${LOG_DIR:-./logs/remote-fsu-comm}"
@@ -56,6 +57,7 @@ TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-5}"
 PASS_COUNT=0
 FAIL_COUNT=0
 SKIP_COUNT=0
+WARN_COUNT=0
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
 RUN_LOG_DIR="${LOG_DIR}/${RUN_ID}"
 
@@ -71,6 +73,7 @@ log_info()    { echo "[INFO]  $*"; }
 log_pass()    { echo "[PASS]  $*"; PASS_COUNT=$((PASS_COUNT + 1)); }
 log_fail()    { echo "[FAIL]  $*"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 log_skip()    { echo "[SKIP]  $*"; SKIP_COUNT=$((SKIP_COUNT + 1)); }
+log_warn()    { echo "[WARN]  $*"; WARN_COUNT=$((WARN_COUNT + 1)); }
 
 save_env() {
     cat > "${RUN_LOG_DIR}/env.txt" <<ENVEOF
@@ -101,6 +104,7 @@ while [[ $# -gt 0 ]]; do
         --auth-token) AUTH_TOKEN="$2"; shift 2 ;;
         --enable-probe) ENABLE_PROTOCOL_PROBE=true; shift ;;
         --enable-tcpdump) ENABLE_TCPDUMP=true; shift ;;
+        --enable-local-sc-mock) ENABLE_LOCAL_SC_MOCK=true; shift ;;
         --timeout) TIMEOUT_SECONDS="$2"; shift 2 ;;
         -h|--help) cat <<HELP
 用法: $0 [选项]
@@ -126,6 +130,11 @@ HELP
         *) echo "未知选项: $1 (使用 -h 查看帮助)"; exit 2 ;;
     esac
 done
+
+# ---- auto-source env.remote (若存在) ----
+if [[ -f "./env.remote" ]]; then
+    set -a; source ./env.remote; set +a
+fi
 
 # ---- 主流程 ----
 init_log_dir
@@ -348,9 +357,51 @@ else
 fi
 
 # ===================================================================
-# E. tcpdump 辅助抓包 (可选)
+# E. 本地 SCService mock 自检 (可选)
 # ===================================================================
-log_section "E. tcpdump 辅助抓包"
+log_section "E. 本地 SCService mock 自检"
+{
+    echo "=== 本地 SCService mock ==="
+} > "${RUN_LOG_DIR}/local_sc_mock.txt"
+
+if [[ "${ENABLE_LOCAL_SC_MOCK}" != "true" ]]; then
+    log_skip "ENABLE_LOCAL_SC_MOCK=false, 跳过 SCService mock 自检"
+else
+    log_warn "SCService mock 可能产生 mock message log, 不建议生产环境执行"
+    SC_URL="${PLATFORM_BASE}${PLATFORM_SC_PATH}"
+    MOCK_BODY='<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <LOGIN xmlns="http://service.sc.binterface.dcim.com">
+      <FSUID>'${FSUID:-FSU-TEST}'</FSUID>
+      <FSUCode>'${FSUID:-FSU-TEST}'</FSUCode>
+      <StationName>'${STATION_NAME}'</StationName>
+    </LOGIN>
+  </soap:Body>
+</soap:Envelope>'
+
+    MOCK_CODE=$(curl -s -o /tmp/fusu_mock_${RUN_ID}.txt -w "%{http_code}" \
+        --max-time "${TIMEOUT_SECONDS}" \
+        -X POST \
+        -H "Content-Type: text/xml; charset=utf-8" \
+        -H "SOAPAction: \"\"" \
+        -d "${MOCK_BODY}" \
+        "${SC_URL}" 2>/dev/null || echo "000")
+    echo "SC mock → HTTP ${MOCK_CODE}" >> "${RUN_LOG_DIR}/local_sc_mock.txt"
+    cat /tmp/fusu_mock_${RUN_ID}.txt >> "${RUN_LOG_DIR}/local_sc_mock.txt" 2>/dev/null || true
+    rm -f /tmp/fusu_mock_${RUN_ID}.txt
+
+    if [[ "${MOCK_CODE}" =~ ^[23] ]]; then
+        log_pass "SCService mock LOGIN 入口响应正常 (HTTP ${MOCK_CODE})"
+    else
+        log_warn "SCService mock LOGIN 响应异常 (HTTP ${MOCK_CODE}) — 可能是 SOAP 格式不符预期, 非阻断"
+    fi
+fi
+
+# ===================================================================
+# F. tcpdump 辅助抓包 (可选)
+# ===================================================================
+log_section "F. tcpdump 辅助抓包"
 
 if [[ "${ENABLE_TCPDUMP}" != "true" ]]; then
     log_skip "ENABLE_TCPDUMP=false, 跳过抓包"
@@ -393,6 +444,7 @@ echo " 总计: ${TOTAL} 项"
 echo " PASS: ${PASS_COUNT}"
 echo " FAIL: ${FAIL_COUNT}"
 echo " SKIP: ${SKIP_COUNT}"
+echo " WARN: ${WARN_COUNT}"
 echo " 日志: ${RUN_LOG_DIR}"
 echo "============================================"
 
