@@ -1,6 +1,8 @@
 package com.dcim.platform.module.resource.controller;
 
 import com.dcim.platform.common.response.ApiResponse;
+import com.dcim.platform.common.security.RequirePermission;
+import com.dcim.platform.common.security.Permissions;
 import com.dcim.platform.module.resource.entity.MonitoringPointEntity;
 import com.dcim.platform.module.resource.service.MonitoringPointService;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/monitoring-points")
+@RequirePermission(Permissions.FSU_VIEW)
 public class MonitoringPointController {
 
     private final MonitoringPointService service;
@@ -27,16 +30,19 @@ public class MonitoringPointController {
     }
 
     @PostMapping
+    @RequirePermission(Permissions.FSU_CREATE)
     public ApiResponse<MonitoringPointEntity> create(@RequestBody MonitoringPointEntity entity) {
         return ApiResponse.success(service.create(entity));
     }
 
     @PutMapping("/{id}")
+    @RequirePermission(Permissions.FSU_UPDATE)
     public ApiResponse<MonitoringPointEntity> update(@PathVariable Long id, @RequestBody MonitoringPointEntity entity) {
         return ApiResponse.success(service.update(id, entity));
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission(Permissions.FSU_DELETE)
     public ApiResponse<Void> delete(@PathVariable Long id) {
         service.deleteById(id);
         return ApiResponse.success();

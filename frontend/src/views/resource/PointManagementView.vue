@@ -1,57 +1,105 @@
 <template>
   <div>
-    <PageHeader title="监控点位" description="管理各FSU下的监控采集点位" />
-    <SearchPanel v-model="search" @search="fetchData" @reset="resetSearch">
-      <el-form-item label="FSU ID"><el-input v-model="search.fsuId" placeholder="FSU ID" clearable /></el-form-item>
-      <el-form-item label="点位编码"><el-input v-model="search.pointCode" placeholder="点位编码" clearable /></el-form-item>
-      <template #extra><el-button type="primary" @click="openDialog()">新增</el-button></template>
-    </SearchPanel>
-    <el-card>
-      <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="fsuId" label="FSU ID" width="80" />
-        <el-table-column prop="pointCode" label="点位编码" width="120" />
-        <el-table-column prop="pointName" label="点位名称" min-width="150" />
-        <el-table-column prop="pointType" label="类型" width="80" />
+    <PageHeader title="点位字典" description="平台标准采集点位定义、类型、单位和告警阈值" />
+
+    <DataStateAlert v-if="dataState !== 'normal'" :state="dataState" />
+
+    <div class="metric-row" style="margin-bottom: 16px">
+      <MetricCard title="标准点位" :value="totalCount" status="info" :loading="loading" />
+      <MetricCard title="AI 模拟量" :value="aiCount" status="normal" :loading="loading" />
+      <MetricCard title="DI 数字量" :value="diCount" status="normal" :loading="loading" />
+      <MetricCard title="未确认单位" :value="unknownUnitCount" :status="unknownUnitCount > 0 ? 'warning' : 'normal'" :loading="loading" />
+    </div>
+
+    <FilterPanel style="margin-bottom: 16px">
+      <el-select v-model="filterType" placeholder="点位类型" clearable size="small" style="width: 140px">
+        <el-option label="AI 模拟量" value="AI" />
+        <el-option label="DI 数字量" value="DI" />
+        <el-option label="DO 控制量" value="DO" />
+        <el-option label="PI 脉冲量" value="PI" />
+      </el-select>
+      <el-select v-model="filterStatus" placeholder="状态" clearable size="small" style="width: 120px">
+        <el-option label="启用" value="ACTIVE" />
+        <el-option label="停用" value="INACTIVE" />
+      </el-select>
+      <el-input v-model="filterKeyword" placeholder="点位编码/名称" clearable size="small" style="width: 180px" />
+    </FilterPanel>
+
+    <div class="app-card data-table" style="padding: 0; overflow: hidden">
+      <el-table :data="filteredData" stripe v-loading="loading" size="small" empty-text=" ">
+        <el-table-column prop="pointCode" label="点位编码" width="140" />
+        <el-table-column prop="pointName" label="点位名称" min-width="160" />
+        <el-table-column prop="pointType" label="类型" width="80">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.pointType === 'DI' ? 'info' : ''">{{ row.pointType || '-' }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="dataType" label="数据类型" width="80" />
-        <el-table-column prop="unit" label="单位" width="60" />
-        <el-table-column prop="status" label="状态" width="80"><template #default="{row}"><el-tag :type="row.status==='ACTIVE'?'success':'info'">{{row.status}}</el-tag></template></el-table-column>
-        <el-table-column label="操作" width="160" fixed="right"><template #default="{row}"><el-button size="small" @click="openDialog(row)">编辑</el-button><el-button size="small" type="danger" @click="handleDelete(row.id)">删除</el-button></template></el-table-column>
+        <el-table-column prop="unit" label="单位" width="80">
+          <template #default="{ row }">
+            <span v-if="row.unit">{{ row.unit }}</span>
+            <span v-else style="color: var(--status-warning); font-size: 12px">待确认</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="80">
+          <template #default="{ row }"><StatusBadge :status="row.status" /></template>
+        </el-table-column>
       </el-table>
-    </el-card>
-    <el-dialog :title="editingId?'编辑点位':'新增点位'" v-model="dialogVisible" width="560px">
-      <el-form :model="form" label-width="110px">
-        <el-form-item label="FSU ID" required><el-input-number v-model="form.fsuId" :min="1" /></el-form-item>
-        <el-form-item label="点位编码" required><el-input v-model="form.pointCode" /></el-form-item>
-        <el-form-item label="点位名称" required><el-input v-model="form.pointName" /></el-form-item>
-        <el-form-item label="点位类型" required><el-select v-model="form.pointType"><el-option label="AI-模拟量输入" value="AI" /><el-option label="DI-数字量输入" value="DI" /><el-option label="DO-数字量输出" value="DO" /><el-option label="PI-脉冲输入" value="PI" /></el-select></el-form-item>
-        <el-form-item label="数据类型"><el-select v-model="form.dataType"><el-option label="数值" value="NUMBER" /><el-option label="文本" value="TEXT" /></el-select></el-form-item>
-        <el-form-item label="单位"><el-input v-model="form.unit" /></el-form-item>
-        <el-form-item label="告警上限"><el-input-number v-model="form.alarmUpper" :precision="2" /></el-form-item>
-        <el-form-item label="告警下限"><el-input-number v-model="form.alarmLower" :precision="2" /></el-form-item>
-        <el-form-item label="状态"><el-select v-model="form.status"><el-option label="启用" value="ACTIVE" /><el-option label="停用" value="INACTIVE" /></el-select></el-form-item>
-      </el-form>
-      <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSave" :loading="saving">保存</el-button></template>
-    </el-dialog>
+
+      <EmptyState v-if="!loading && filteredData.length === 0 && dataState === 'normal'"
+        type="empty" title="暂无标准点位" :description="filterActive ? '当前筛选条件下无匹配结果' : '请先导入或创建标准点位字典'" />
+    </div>
   </div>
 </template>
+
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
-import SearchPanel from '@/components/SearchPanel.vue'
-import { getMonitoringPoints, createMonitoringPoint, updateMonitoringPoint, deleteMonitoringPoint } from '@/api/resource'
-import type { MonitoringPoint } from '@/types'
+import MetricCard from '@/components/common/MetricCard.vue'
+import DataStateAlert from '@/components/common/DataStateAlert.vue'
+import FilterPanel from '@/components/common/FilterPanel.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import { getMonitoringPoints } from '@/api/resource'
 
-const loading = ref(false); const saving = ref(false)
-const tableData = ref<MonitoringPoint[]>([]); const dialogVisible = ref(false); const editingId = ref<number | null>(null)
-const search = reactive({ fsuId: '', pointCode: '' })
-const form = reactive<MonitoringPoint>({ fsuId: 0, pointCode: '', pointName: '', pointType: 'AI', dataType: 'NUMBER', status: 'ACTIVE' })
+const loading = ref(false)
+const rawData = ref<any[]>([])
+const filterType = ref('')
+const filterStatus = ref('')
+const filterKeyword = ref('')
+const dataState = ref<'normal' | 'api_not_found' | 'network_error' | 'unauthorized' | 'forbidden' | 'server_error' | 'empty'>('normal')
 
-async function fetchData() { loading.value = true; try { const res: any = await getMonitoringPoints(); tableData.value = res.data || [] } catch { tableData.value = [] } finally { loading.value = false } }
-function resetSearch() { search.fsuId = ''; search.pointCode = ''; fetchData() }
-function openDialog(row?: MonitoringPoint) { editingId.value = row?.id ?? null; if (row) Object.assign(form, row); else { Object.assign(form, { fsuId: 0, pointCode: '', pointName: '', pointType: 'AI', dataType: 'NUMBER', status: 'ACTIVE', unit: '', alarmUpper: undefined, alarmLower: undefined }) }; dialogVisible.value = true }
-async function handleSave() { saving.value = true; try { editingId.value ? await updateMonitoringPoint(editingId.value, form) : await createMonitoringPoint(form); ElMessage.success('保存成功'); dialogVisible.value = false; fetchData() } catch { ElMessage.error('保存失败') } finally { saving.value = false } }
-async function handleDelete(id: number) { try { await ElMessageBox.confirm('确定删除?', '提示', { type: 'warning' }); await deleteMonitoringPoint(id); ElMessage.success('已删除'); fetchData() } catch { /* cancelled */ } }
-onMounted(fetchData)
+const filteredData = computed(() => {
+  let rows = rawData.value
+  if (filterType.value) rows = rows.filter(r => r.pointType === filterType.value)
+  if (filterStatus.value) rows = rows.filter(r => r.status === filterStatus.value)
+  if (filterKeyword.value) {
+    const kw = filterKeyword.value.toLowerCase()
+    rows = rows.filter(r => (r.pointCode || '').toLowerCase().includes(kw) || (r.pointName || '').toLowerCase().includes(kw))
+  }
+  return rows
+})
+
+const totalCount = computed(() => rawData.value.length)
+const aiCount = computed(() => rawData.value.filter(r => r.pointType === 'AI').length)
+const diCount = computed(() => rawData.value.filter(r => r.pointType === 'DI').length)
+const unknownUnitCount = computed(() => rawData.value.filter(r => !r.unit).length)
+const filterActive = computed(() => !!(filterType.value || filterStatus.value || filterKeyword.value))
+
+onMounted(async () => {
+  loading.value = true; dataState.value = 'normal'
+  try {
+    const res: any = await getMonitoringPoints()
+    rawData.value = Array.isArray(res?.data) ? res.data : (res?.data?.data || [])
+    if (rawData.value.length === 0) dataState.value = 'empty'
+  } catch (e: any) {
+    rawData.value = []
+    if (e?.response?.status === 404) dataState.value = 'api_not_found'
+    else if (e?.response?.status === 401) dataState.value = 'unauthorized'
+    else if (e?.response?.status === 403) dataState.value = 'forbidden'
+    else if (e?.response?.status && e.response.status >= 500) dataState.value = 'server_error'
+    else if (e?.request && !e?.response) dataState.value = 'network_error'
+    else dataState.value = 'server_error'
+  } finally { loading.value = false }
+})
 </script>

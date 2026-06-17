@@ -19,7 +19,7 @@ class SetCommandAuditIntegrationTest {
     @BeforeEach
     void setUp() {
         props = new SetCommandSafetyProperties();
-        gate = new SetCommandSafetyGate(props);
+        gate = new SetCommandSafetyGate(props, null);
         audit = new SetCommandAuditService();
         tokenSvc = new ConfirmationTokenService();
     }

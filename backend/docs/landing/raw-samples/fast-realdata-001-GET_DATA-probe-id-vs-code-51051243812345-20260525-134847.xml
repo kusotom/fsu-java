@@ -1,0 +1,23 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-id-vs-code -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T13:48:47.212514909 -->
+
+=== REQUEST ===
+<FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><DeviceList><Device Id="999999999999" Code="999999999999"/></DeviceList>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_DATA_ACK</Name>
+        <Code>402</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <Values>
+            <DeviceList/>
+        </Values>
+    </Info>
+</Response></soap:Body></soap:Envelope>

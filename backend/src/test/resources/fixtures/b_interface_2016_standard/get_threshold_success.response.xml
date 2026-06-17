@@ -1,0 +1,18 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>GET_THRESHOLD_ACK</Name><Code>1902</Code></PK_Type>
+      <Info>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <Values>
+          <DeviceList>
+            <Device Id="51051241820004" Code="51051241820004">
+              <TThreshold Id="0118001001" AlarmLimit="30" AbsoluteVal="35" RelativeVal="5"/>
+            </Device>
+          </DeviceList>
+        </Values>
+      </Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

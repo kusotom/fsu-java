@@ -1,6 +1,8 @@
 package com.dcim.platform.module.telemetry.controller;
 
 import com.dcim.platform.common.response.ApiResponse;
+import com.dcim.platform.common.security.RequirePermission;
+import com.dcim.platform.common.security.Permissions;
 import com.dcim.platform.module.telemetry.entity.HistoryDataEntity;
 import com.dcim.platform.module.telemetry.service.HistoryDataService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -10,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/telemetry/history")
+@RequirePermission(Permissions.REALTIME_VIEW)
 public class HistoryDataController {
 
     private final HistoryDataService service;

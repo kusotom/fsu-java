@@ -98,19 +98,25 @@ public class LoginCommandHandler implements CommandHandler {
         Instant now = Instant.now();
         String serverTime = ISO_FORMATTER.format(now.atZone(ZoneId.systemDefault()));
 
-        String infoXml = "<ResultCode>0</ResultCode>"
+        // BIF2016-REGISTER-INTERVAL-001: include interval audit info in response
+        String infoXml = "<Result>1</Result>"
                 + "<SessionID>" + loginResult.getSessionId() + "</SessionID>"
                 + "<ExpireSeconds>" + LoginService.DEFAULT_EXPIRE_SECONDS + "</ExpireSeconds>"
                 + "<ServerTime>" + serverTime + "</ServerTime>";
 
+        if (loginResult.isDuplicateWithin120s()) {
+            infoXml += "<RegisterDecision>ACCEPTED_DUPLICATE</RegisterDecision>"
+                    + "<RegisterIntervalSeconds>" + loginResult.getRegisterIntervalSeconds() + "</RegisterIntervalSeconds>";
+        }
+
         CommandResult result = new CommandResult();
         result.setSuccess(true);
         result.setResultCode("1");
-        result.setResultDesc("登录成功");
+        result.setResultDesc(loginResult.getResultDesc());
         result.setPkType(BInterfacePkType.LOGIN);
         result.setImplemented(true);
         result.setResponseInfoXml(infoXml);
-        result.setResponseXmlData(null); // LOGIN 响应 xmlData 为空
+        result.setResponseXmlData(null);
         return result;
     }
 

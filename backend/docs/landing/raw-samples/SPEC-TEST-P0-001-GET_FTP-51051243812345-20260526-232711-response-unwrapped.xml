@@ -1,0 +1,13 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_FTP_ACK</Name>
+        <Code>1602</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <UserName>ttcw2015</UserName>
+        <Password>ttcw@2015</Password>
+        <Result>1</Result>
+    </Info>
+</Response></soap:Body></soap:Envelope>

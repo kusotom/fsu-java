@@ -1,0 +1,58 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-device-list -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T13:48:47.435245268 -->
+
+=== REQUEST ===
+<FsuId>51051243812345</FsuId><FsuCode>51051243812345</FsuCode><DeviceList><Device Id="51051241820004" Code="51051241820004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+</Device>
+<Device Id="51051241830004" Code="51051241830004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+</Device>
+<Device Id="51051241840004" Code="51051241840004">
+<TSemaphore Id="0118001001" Code="0118001001"/>
+<TSemaphore Id="0218001001" Code="0218001001"/>
+<TSemaphore Id="0318001001" Code="0318001001"/>
+<TSemaphore Id="0418001001" Code="0418001001"/>
+<TSemaphore Id="0118002001" Code="0118002001"/>
+</Device>
+<Device Id="51051240700002" Code="51051240700002">
+<TSemaphore Id="0107001001" Code="0107001001"/>
+<TSemaphore Id="0207001001" Code="0207001001"/>
+<TSemaphore Id="0307001001" Code="0307001001"/>
+<TSemaphore Id="0407001001" Code="0407001001"/>
+<TSemaphore Id="0107002001" Code="0107002001"/>
+</Device>
+<Device Id="51051243812345" Code="51051243812345">
+<TSemaphore Id="0138101001" Code="0138101001"/>
+<TSemaphore Id="0238101001" Code="0238101001"/>
+<TSemaphore Id="0338101001" Code="0338101001"/>
+<TSemaphore Id="0438101001" Code="0438101001"/>
+<TSemaphore Id="0138102001" Code="0138102001"/>
+</Device>
+</DeviceList>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_DATA_ACK</Name>
+        <Code>402</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <Values>
+            <DeviceList/>
+        </Values>
+    </Info>
+</Response></soap:Body></soap:Envelope>

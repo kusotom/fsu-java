@@ -2,6 +2,7 @@ package com.dcim.platform.module.resource.service;
 
 import com.dcim.platform.module.resource.entity.MonitoringPointEntity;
 import com.dcim.platform.module.resource.repository.MonitoringPointRepository;
+import com.dcim.platform.common.security.DataScopeService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,17 +10,33 @@ import java.util.List;
 public class MonitoringPointService {
 
     private final MonitoringPointRepository repository;
+    private final DataScopeService dataScopeService;
 
-    public MonitoringPointService(MonitoringPointRepository repository) {
+    public MonitoringPointService(MonitoringPointRepository repository, DataScopeService dataScopeService) {
         this.repository = repository;
+        this.dataScopeService = dataScopeService;
     }
 
     public List<MonitoringPointEntity> list() {
-        return repository.findAll();
+        List<MonitoringPointEntity> all = repository.findAll();
+        return dataScopeService.filterByFsuScope(all, e -> String.valueOf(e.getFsuId()));
     }
 
     public MonitoringPointEntity getById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new RuntimeException("Point not found: " + id));
+        MonitoringPointEntity entity = repository.findById(id).orElseThrow(() -> new RuntimeException("MonitoringPointEntity not found: " + id));
+        checkScopeForEntity(entity, "fsuCode", "MonitoringPointEntity");
+        return entity;
+    }
+
+    private void checkScopeForEntity(MonitoringPointEntity entity, String scopeType, String entityName) {
+        com.dcim.platform.common.security.RequestContext ctx = com.dcim.platform.common.security.RequestContext.getCurrent();
+        if (ctx == null || ctx.isAdminLike()) return;
+
+        String code = String.valueOf(entity.getFsuId());
+        if (code != null && !ctx.getFsuScope().isEmpty() && !ctx.getFsuScope().contains(code)) {
+            throw new com.dcim.platform.common.exception.ForbiddenException(
+                "无权访问此" + entityName + ": fsuCode=" + code, "fsu:view");
+        }
     }
 
     public MonitoringPointEntity create(MonitoringPointEntity entity) {

@@ -2,10 +2,14 @@ package com.dcim.platform.module.binterface.service;
 
 import com.dcim.platform.module.alarm.entity.AlarmRecordEntity;
 import com.dcim.platform.module.alarm.repository.AlarmRecordRepository;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingResult;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingService;
+import com.dcim.platform.module.mapping.service.UnmappedSignalObservationService;
 import com.dcim.platform.module.resource.entity.FsuDeviceEntity;
 import com.dcim.platform.module.resource.repository.FsuDeviceRepository;
 import com.dcim.platform.module.resource.repository.MonitoringPointRepository;
 import com.dcim.platform.module.binterface.xml.XmlDataModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -46,11 +50,23 @@ public class SendAlarmService {
 
     private final FsuDeviceRepository fsuDeviceRepository;
     private final AlarmRecordRepository alarmRecordRepository;
+    private final EStoneIIMappingService mappingService;
+    private final UnmappedSignalObservationService unmappedService;
+
+    @Autowired
+    public SendAlarmService(FsuDeviceRepository fsuDeviceRepository,
+                            AlarmRecordRepository alarmRecordRepository,
+                            EStoneIIMappingService mappingService,
+                            UnmappedSignalObservationService unmappedService) {
+        this.fsuDeviceRepository = fsuDeviceRepository;
+        this.alarmRecordRepository = alarmRecordRepository;
+        this.mappingService = mappingService;
+        this.unmappedService = unmappedService;
+    }
 
     public SendAlarmService(FsuDeviceRepository fsuDeviceRepository,
                             AlarmRecordRepository alarmRecordRepository) {
-        this.fsuDeviceRepository = fsuDeviceRepository;
-        this.alarmRecordRepository = alarmRecordRepository;
+        this(fsuDeviceRepository, alarmRecordRepository, null, null);
     }
 
     /**
@@ -103,7 +119,7 @@ public class SendAlarmService {
                 }
 
                 // 处理告警（产生或恢复）
-                AlarmRecordEntity saved = processOneAlarm(fsuId, parsed, alarmTime, now);
+                AlarmRecordEntity saved = processOneAlarm(fsuCode, fsuId, parsed, alarmTime, now);
                 if (parsed.isRecover) {
                     recovered++;
                 } else {
@@ -209,7 +225,7 @@ public class SendAlarmService {
                 isRecover, null);
     }
 
-    private AlarmRecordEntity processOneAlarm(Long fsuId, AlarmParseResult parsed,
+    private AlarmRecordEntity processOneAlarm(String fsuCode, Long fsuId, AlarmParseResult parsed,
                                                LocalDateTime alarmTime, LocalDateTime now) {
         if (parsed.isRecover) {
             // 告警恢复：查找已有 ACTIVE 告警，更新状态
@@ -238,20 +254,20 @@ public class SendAlarmService {
                 // 未找到原始告警，以恢复状态创建记录
                 log.warn("SEND_ALARM 恢复: 未找到 ACTIVE 告警 fsuId={} signalId={} alarmCode={}",
                         fsuId, parsed.signalId, parsed.alarmCode);
-                AlarmRecordEntity entity = buildAlarmEntity(fsuId, parsed, alarmTime, now);
+                AlarmRecordEntity entity = buildAlarmEntity(fsuCode, fsuId, parsed, alarmTime, now);
                 entity.setAlarmStatus(ALARM_STATUS_RECOVERED);
                 entity.setClearTime(now);
                 return alarmRecordRepository.save(entity);
             }
         } else {
             // 告警产生：创建新记录
-            AlarmRecordEntity entity = buildAlarmEntity(fsuId, parsed, alarmTime, now);
+            AlarmRecordEntity entity = buildAlarmEntity(fsuCode, fsuId, parsed, alarmTime, now);
             entity.setAlarmStatus(ALARM_STATUS_ACTIVE);
             return alarmRecordRepository.save(entity);
         }
     }
 
-    private AlarmRecordEntity buildAlarmEntity(Long fsuId, AlarmParseResult parsed,
+    private AlarmRecordEntity buildAlarmEntity(String fsuCode, Long fsuId, AlarmParseResult parsed,
                                                 LocalDateTime alarmTime, LocalDateTime now) {
         AlarmRecordEntity entity = new AlarmRecordEntity();
         entity.setFsuId(fsuId);
@@ -260,7 +276,9 @@ public class SendAlarmService {
         entity.setDeviceId(parsed.deviceId);
         entity.setSpid(parsed.spid);
         entity.setAlarmCode(parsed.alarmCode);
-        entity.setAlarmName(parsed.alarmName);
+        EStoneIIMappingResult mapped = resolveAlarmMapping(fsuCode, parsed);
+        entity.setAlarmName(parsed.alarmName != null ? parsed.alarmName
+                : (mapped != null && mapped.eventName() != null ? mapped.eventName() : mapped != null ? mapped.signalName() : null));
         entity.setAlarmLevel(parsed.alarmLevel);
         entity.setAlarmValue(parsed.alarmValue);
         // 2016 DeviceCode 写入 alarmDesc 补充（不覆盖原始描述）
@@ -273,7 +291,31 @@ public class SendAlarmService {
         entity.setOccurTime(alarmTime);
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
+        if (mapped != null && (!mapped.mapped() || mapped.reason() != null)) {
+            recordUnmappedAlarm(fsuCode, parsed, mapped);
+        }
         return entity;
+    }
+
+    private EStoneIIMappingResult resolveAlarmMapping(String fsuCode, AlarmParseResult parsed) {
+        if (mappingService == null) return null;
+        return mappingService.resolveAlarm(fsuCode, parsed.deviceId, parsed.deviceCode,
+                parsed.spid, parsed.signalId, parsed.alarmCode, parsed.alarmValue);
+    }
+
+    private void recordUnmappedAlarm(String fsuCode, AlarmParseResult parsed, EStoneIIMappingResult mapped) {
+        if (unmappedService == null) return;
+        String rawId = "UNKNOWN_EVENT_ID".equals(mapped.reason())
+                ? parsed.alarmCode : firstNonBlank(parsed.spid, parsed.signalId, parsed.alarmCode);
+        unmappedService.record(fsuCode, parsed.deviceId, parsed.deviceCode, parsed.spid,
+                parsed.signalId, rawId,
+                parsed.alarmName, parsed.alarmValue, null, "SEND_ALARM", null, null,
+                mapped.reason() != null ? mapped.reason() : "UNKNOWN_EVENT_ID");
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) if (v != null && !v.trim().isEmpty()) return v.trim();
+        return null;
     }
 
     public static LocalDateTime parseAlarmTime(String alarmTimeStr, LocalDateTime defaultTime) {

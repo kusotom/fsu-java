@@ -1,15 +1,24 @@
 package com.dcim.platform.module.binterface.controller;
 
 import com.dcim.platform.common.response.ApiResponse;
+import com.dcim.platform.common.security.RequirePermission;
+import com.dcim.platform.common.security.Permissions;
+import com.dcim.platform.common.security.DataScopeService;
+import com.dcim.platform.common.security.audit.AuditLogService;
 import com.dcim.platform.module.binterface.log.BInterfaceMessageLogEntity;
 import com.dcim.platform.module.binterface.log.BInterfaceMessageLogService;
 import com.dcim.platform.module.binterface.service.BInterfaceMessageLogQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -19,6 +28,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/b-interface/message-logs")
+@RequirePermission(Permissions.PROTOCOL_RAW_VIEW)
 public class BInterfaceMessageLogController {
 
     private static final Logger log = LoggerFactory.getLogger(BInterfaceMessageLogController.class);
@@ -29,11 +39,17 @@ public class BInterfaceMessageLogController {
 
     private final BInterfaceMessageLogQueryService queryService;
     private final BInterfaceMessageLogService logService;
+    private final AuditLogService auditLogService;
+    private final DataScopeService dataScopeService;
 
     public BInterfaceMessageLogController(BInterfaceMessageLogQueryService queryService,
-                                           BInterfaceMessageLogService logService) {
+                                           BInterfaceMessageLogService logService,
+                                           AuditLogService auditLogService,
+                                           DataScopeService dataScopeService) {
         this.queryService = queryService;
         this.logService = logService;
+        this.auditLogService = auditLogService;
+        this.dataScopeService = dataScopeService;
     }
 
     // ===== 旧接口（保持兼容） =====
@@ -50,11 +66,80 @@ public class BInterfaceMessageLogController {
     }
 
     /**
-     * 按 ID 查询单条报文日志。
+     * 按 ID 查询单条报文日志。记录 raw XML 查看审计 + scope 校验.
      */
     @GetMapping("/{id}")
     public ApiResponse<BInterfaceMessageLogEntity> getById(@PathVariable Long id) {
-        return ApiResponse.success(queryService.getById(id));
+        BInterfaceMessageLogEntity entity = queryService.getById(id);
+        if (entity == null) return ApiResponse.success(null);
+        // BE-AUTH-P0-FIX-002: scope 校验
+        if (!canAccessRawXmlRecord(entity)) {
+            auditLogService.logPermissionDenied(
+                com.dcim.platform.common.security.RequestContext.getCurrent() != null ?
+                    com.dcim.platform.common.security.RequestContext.getCurrent().getUserId() : null,
+                com.dcim.platform.common.security.RequestContext.getCurrent() != null ?
+                    com.dcim.platform.common.security.RequestContext.getCurrent().getUsername() : null,
+                "/api/b-interface/message-logs/" + id, "protocol:raw:view",
+                "fsuScope不匹配: fsuCode=" + entity.getFsuCode());
+            return ApiResponse.fail(403, "无权访问此报文: fsuScope不匹配");
+        }
+        auditLogService.logRawXmlAccess(id, entity.getFsuCode());
+        return ApiResponse.success(entity);
+    }
+
+    /** BE-AUTH-P0-FIX-002: 校验当前用户是否有权访问此 raw XML 记录.
+     *  empty scope → default-deny; null fsuCode → default-deny for non-super_admin. */
+    private boolean canAccessRawXmlRecord(BInterfaceMessageLogEntity entity) {
+        com.dcim.platform.common.security.RequestContext ctx =
+            com.dcim.platform.common.security.RequestContext.getCurrent();
+        if (ctx == null) return false;
+
+        // super_admin 可查看全部 (包括 null fsuCode)
+        if (ctx.isSuperAdmin()) return true;
+
+        // null fsuCode 的敏感记录: 非 super_admin 默认拒绝
+        if (entity.getFsuCode() == null) return false;
+
+        // admin-like (admin/platform_admin) 可查看全部有 fsuCode 的记录
+        if (ctx.isAdminLike()) return true;
+
+        java.util.Set<String> allowed = dataScopeService.getAllowedFsuCodes();
+        // allowed == null → DataScope 判定为 admin-like 全部可见 (已在上面处理)
+        if (allowed == null) return true;
+        // BE-AUTH-P0-FIX-002: empty scope = default-deny
+        if (allowed.isEmpty()) return false;
+        return allowed.contains(entity.getFsuCode());
+    }
+
+    /**
+     * 下载 raw XML 报文。需额外 protocol:raw:download 权限 (AND raw:view).
+     */
+    @GetMapping("/{id}/download")
+    @RequirePermission(value = {Permissions.PROTOCOL_RAW_VIEW, Permissions.PROTOCOL_RAW_DOWNLOAD}, requireAll = true)
+    public ResponseEntity<ByteArrayResource> downloadXml(@PathVariable Long id) {
+        BInterfaceMessageLogEntity entity = queryService.getById(id);
+        if (entity == null || entity.getRawMessage() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        // BE-AUTH-P0-FIX-002: scope 校验
+        if (!canAccessRawXmlRecord(entity)) {
+            auditLogService.logPermissionDenied(
+                com.dcim.platform.common.security.RequestContext.getCurrent() != null ?
+                    com.dcim.platform.common.security.RequestContext.getCurrent().getUserId() : null,
+                com.dcim.platform.common.security.RequestContext.getCurrent() != null ?
+                    com.dcim.platform.common.security.RequestContext.getCurrent().getUsername() : null,
+                "/api/b-interface/message-logs/" + id + "/download", "protocol:raw:download",
+                "fsuScope不匹配: fsuCode=" + entity.getFsuCode());
+            return ResponseEntity.status(403).build();
+        }
+        auditLogService.logRawXmlDownload(id, entity.getFsuCode());
+        byte[] bytes = entity.getRawMessage().getBytes(StandardCharsets.UTF_8);
+        ByteArrayResource resource = new ByteArrayResource(bytes);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=message-" + id + ".xml")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(resource);
     }
 
     // ===== LANDING-010: 分页查询 =====
@@ -97,6 +182,7 @@ public class BInterfaceMessageLogController {
      * @return 删除的记录数
      */
     @DeleteMapping("/cleanup")
+    @RequirePermission(Permissions.PROTOCOL_RAW_CLEANUP)
     public ApiResponse<Long> cleanupByDays(
             @RequestParam(required = false, defaultValue = "0") int olderThanDays) {
 

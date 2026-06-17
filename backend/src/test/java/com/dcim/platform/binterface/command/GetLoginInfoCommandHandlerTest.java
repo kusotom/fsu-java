@@ -42,7 +42,7 @@ class GetLoginInfoCommandHandlerTest {
         CommandResult result = handler.handle(createContext("FSU-001"));
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
         assertTrue(result.isImplemented());
         assertEquals(BInterfacePkType.GET_LOGININFO, result.getPkType());
     }

@@ -1,0 +1,13 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>GET_LOGININFO_ACK</Name><Code>1502</Code></PK_Type>
+      <Info>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <UserName>ipsec_user</UserName>
+        <PassWord>placeholder_not_real</PassWord>
+      </Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

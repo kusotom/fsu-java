@@ -1,0 +1,12 @@
+<!-- FAST-REALDATA-001 raw sample -->
+<!-- operation: GET_DATA-probe-simple-signalid -->
+<!-- fsuCode: 51051243812345 -->
+<!-- timestamp: 2026-05-25T13:11:21.382513355 -->
+
+=== REQUEST ===
+<FSUCode>51051243812345</FSUCode>
+<!-- xmlData -->
+<SignalID>0118001001</SignalID><SignalID>0218001001</SignalID><SignalID>0318001001</SignalID><SignalID>0418001001</SignalID><SignalID>0118002001</SignalID>
+
+=== RESPONSE ===
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response/></soap:Body></soap:Envelope>

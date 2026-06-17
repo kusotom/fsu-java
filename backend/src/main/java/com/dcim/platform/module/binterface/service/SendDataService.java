@@ -4,9 +4,13 @@ import com.dcim.platform.module.resource.entity.FsuDeviceEntity;
 import com.dcim.platform.module.resource.entity.MonitoringPointEntity;
 import com.dcim.platform.module.resource.repository.FsuDeviceRepository;
 import com.dcim.platform.module.resource.repository.MonitoringPointRepository;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingResult;
+import com.dcim.platform.module.mapping.service.EStoneIIMappingService;
+import com.dcim.platform.module.mapping.service.UnmappedSignalObservationService;
 import com.dcim.platform.module.telemetry.entity.RealtimeDataEntity;
 import com.dcim.platform.module.telemetry.repository.RealtimeDataRepository;
 import com.dcim.platform.module.binterface.xml.XmlDataModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -46,13 +50,26 @@ public class SendDataService {
     private final FsuDeviceRepository fsuDeviceRepository;
     private final MonitoringPointRepository monitoringPointRepository;
     private final RealtimeDataRepository realtimeDataRepository;
+    private final EStoneIIMappingService mappingService;
+    private final UnmappedSignalObservationService unmappedService;
+
+    @Autowired
+    public SendDataService(FsuDeviceRepository fsuDeviceRepository,
+                           MonitoringPointRepository monitoringPointRepository,
+                           RealtimeDataRepository realtimeDataRepository,
+                           EStoneIIMappingService mappingService,
+                           UnmappedSignalObservationService unmappedService) {
+        this.fsuDeviceRepository = fsuDeviceRepository;
+        this.monitoringPointRepository = monitoringPointRepository;
+        this.realtimeDataRepository = realtimeDataRepository;
+        this.mappingService = mappingService;
+        this.unmappedService = unmappedService;
+    }
 
     public SendDataService(FsuDeviceRepository fsuDeviceRepository,
                            MonitoringPointRepository monitoringPointRepository,
                            RealtimeDataRepository realtimeDataRepository) {
-        this.fsuDeviceRepository = fsuDeviceRepository;
-        this.monitoringPointRepository = monitoringPointRepository;
-        this.realtimeDataRepository = realtimeDataRepository;
+        this(fsuDeviceRepository, monitoringPointRepository, realtimeDataRepository, null, null);
     }
 
     /**
@@ -106,6 +123,7 @@ public class SendDataService {
                 Optional<MonitoringPointEntity> pointOpt = monitoringPointRepository
                         .findByFsuIdAndPointCode(fsuId, parsed.signalId);
                 if (pointOpt.isEmpty()) {
+                    recordUnmapped(fsuCode, null, parsed.signalId, parsed.signalId, parsed.value, "SEND_DATA");
                     rejected++;
                     errors.add("SignalID=" + parsed.signalId + " 未找到对应测点");
                     continue;
@@ -132,6 +150,22 @@ public class SendDataService {
         }
 
         return SendDataResult.success(fsuCode, accepted, rejected);
+    }
+
+    private void recordUnmapped(String fsuCode, String deviceId, String spid, String signalId, String value,
+                                String sourceCommand) {
+        if (unmappedService == null) return;
+        String reason = "UNKNOWN_SIGNAL_ID";
+        if (mappingService != null) {
+            EStoneIIMappingResult mapped = mappingService.resolveRealtime(fsuCode, deviceId, null, spid, signalId, value);
+            if (mapped != null) {
+                if (mapped.mapped() && mapped.reason() == null) return;
+                reason = mapped.reason() != null ? mapped.reason()
+                        : ("TEMPLATE_ONLY".equals(mapped.mappingStatus()) ? "TEMPLATE_ONLY_NOT_RETURNED" : "UNKNOWN_DEVICE_SIGNAL_PAIR");
+            }
+        }
+        unmappedService.record(fsuCode, deviceId, null, spid, signalId, signalId, null, value,
+                null, sourceCommand, null, null, reason);
     }
 
     // ==================== 内部方法 ====================

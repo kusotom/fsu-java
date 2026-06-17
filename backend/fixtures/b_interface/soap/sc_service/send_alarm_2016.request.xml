@@ -1,0 +1,27 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type>SEND_ALARM</PK_Type>
+      <Info>
+        <FSUCode>51051243812345</FSUCode>
+        <FSUID>51051243812345</FSUID>
+        <SessionID>SESSION-51051243812345-TEST</SessionID>
+        <AlarmTime>2026-05-21T12:00:00</AlarmTime>
+      </Info>
+      <xmlData>
+        <TAlarm>
+          <SerialNo>SN-2016-001</SerialNo>
+          <ID>51051241820004</ID>
+          <FSUID>51051243812345</FSUID>
+          <FsuCode>51051243812345</FsuCode>
+          <DeviceID>51051241820004</DeviceID>
+          <DeviceCode>DC-001</DeviceCode>
+          <AlarmTime>2026-05-21T12:00:00</AlarmTime>
+          <AlarmLevel>WARN</AlarmLevel>
+          <AlarmFlag>0</AlarmFlag>
+          <AlarmDesc>温度超过上限60度</AlarmDesc>
+        </TAlarm>
+      </xmlData>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

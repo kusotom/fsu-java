@@ -36,17 +36,17 @@ import java.io.StringWriter;
  *   <li>targetNamespace: http://FSUService.chinatowercom.com</li>
  * </ul>
  *
- * <h3>RPC 封装格式</h3>
+ * <h3>RPC 封装格式 (BIF2016-RPCXML-001)</h3>
  * <pre>{@code
  * SOAP-ENV:Envelope
  *   SOAP-ENV:Body
  *     ns1:invoke (xmlns:ns1="http://FSUService.chinatowercom.com")
- *       xmlData (xsi:type="SOAP-ENC:string")
- *         <Request>    ← 内层 B接口 payload（由 SoapMessageHandler.buildRequest 产出）
+ *       xmlData (xsi:type="xsd:string")
+ *         &lt;Request&gt;   ← XML-escaped text content (not DOM child)
  *           PK_Type
  *           Info
  *           xmlData
- *         </Request>
+ *         &lt;/Request&gt;
  *       </xmlData>
  *     </ns1:invoke>
  * }</pre>
@@ -98,46 +98,55 @@ public class FsuServiceRpcAdapter {
             throw new IllegalArgumentException("requestPayloadXml 不能为空");
         }
 
-        try {
-            DocumentBuilder builder = docFactory.newDocumentBuilder();
-            Document doc = builder.newDocument();
+        // BIF2016-RPCXML-001: Emerson FSU 验证可用格式:
+        // <soap:Envelope xmlns:soap="..." xmlns:xsd="..." xmlns:xsi="...">
+        //   <soap:Body>
+        //     <ns1:invoke xmlns:ns1="http://FSUService.chinatowercom.com">
+        //       <xmlData xsi:type="xsd:string">&lt;Request&gt;...&lt;/Request&gt;</xmlData>
+        //     </ns1:invoke>
+        //   </soap:Body>
+        // </soap:Envelope>
+        //
+        // Use explicit XML string construction to avoid DOM serializer producing
+        // incompatible prefixes (SOAP-ENV) not recognized by Emerson FSU.
 
-            // SOAP-ENV:Envelope
-            Element envelope = doc.createElementNS(SOAP_ENVELOPE_NS, SOAP_PREFIX + ":Envelope");
-            envelope.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                    "xmlns:" + SOAP_PREFIX, SOAP_ENVELOPE_NS);
-            envelope.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                    "xmlns:" + SOAP_ENC_PREFIX, SOAP_ENC_NS);
-            envelope.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                    "xmlns:" + XSI_PREFIX, XSI_NS);
-            envelope.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                    "xmlns:" + NS1_PREFIX, FSU_SERVICE_NS);
-            doc.appendChild(envelope);
+        // Escape the payload as XML text (the DOM serializer would do this,
+        // but explicit construction avoids prefix mismatches).
+        String escapedPayload = xmlEscape(requestPayloadXml);
 
-            // SOAP-ENV:Body
-            Element body = doc.createElementNS(SOAP_ENVELOPE_NS, SOAP_PREFIX + ":Body");
-            envelope.appendChild(body);
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<soap:Envelope"
+                + " xmlns:soap=\"" + SOAP_ENVELOPE_NS + "\""
+                + " xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\""
+                + " xmlns:xsi=\"" + XSI_NS + "\""
+                + ">"
+                + "<soap:Body>"
+                + "<ns1:invoke xmlns:ns1=\"" + FSU_SERVICE_NS + "\">"
+                + "<xmlData xsi:type=\"xsd:string\">" + escapedPayload + "</xmlData>"
+                + "</ns1:invoke>"
+                + "</soap:Body>"
+                + "</soap:Envelope>";
+    }
 
-            // ns1:invoke
-            Element invoke = doc.createElementNS(FSU_SERVICE_NS, NS1_PREFIX + ":invoke");
-            body.appendChild(invoke);
-
-            // xmlData (xsi:type="SOAP-ENC:string")
-            Element xmlDataEl = doc.createElement("xmlData");
-            xmlDataEl.setAttributeNS(XSI_NS, XSI_PREFIX + ":type", SOAP_ENC_PREFIX + ":string");
-            invoke.appendChild(xmlDataEl);
-
-            // 导入内层 payload
-            Document payloadDoc = parseXml(requestPayloadXml);
-            Node importedPayload = doc.importNode(payloadDoc.getDocumentElement(), true);
-            xmlDataEl.appendChild(importedPayload);
-
-            String result = serialize(doc);
-            log.debug("RPC 封装完成: payload 长度={}", requestPayloadXml.length());
-            return result;
-        } catch (Exception e) {
-            throw new RuntimeException("RPC 请求封装失败: " + e.getMessage(), e);
+    /**
+     * XML-escape a string for use as xmlData text content.
+     * Only escapes the 5 XML special characters. Does NOT double-escape.
+     */
+    static String xmlEscape(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder(s.length() + 64);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '&':  sb.append("&amp;"); break;
+                case '<':  sb.append("&lt;"); break;
+                case '>':  sb.append("&gt;"); break;
+                case '"':  sb.append("&quot;"); break;
+                case '\'': sb.append("&apos;"); break;
+                default:   sb.append(c);
+            }
         }
+        return sb.toString();
     }
 
     // ==================== RPC 解包 ====================

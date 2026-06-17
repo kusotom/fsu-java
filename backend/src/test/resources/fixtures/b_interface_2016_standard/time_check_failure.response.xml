@@ -1,0 +1,8 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>TIME_CHECK_ACK</Name><Code>1302</Code></PK_Type>
+      <Info><FsuCode>51051243812345</FsuCode><Result>0</Result></Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

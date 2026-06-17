@@ -1,6 +1,8 @@
 package com.dcim.platform.module.binterface.controller;
 
 import com.dcim.platform.common.response.ApiResponse;
+import com.dcim.platform.common.security.RequirePermission;
+import com.dcim.platform.common.security.Permissions;
 import com.dcim.platform.module.binterface.dto.ActiveAlarmAuditRecordResponse;
 import com.dcim.platform.module.binterface.dto.ActiveAlarmAuditStatusResponse;
 import com.dcim.platform.module.binterface.entity.ActiveAlarmAuditRecordEntity;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/binterface/active-alarm-audit")
+@RequirePermission(Permissions.FSU_VIEW)
 public class ActiveAlarmAuditController {
 
     private final ActiveAlarmAuditStatusService statusService;

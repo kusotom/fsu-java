@@ -1,0 +1,12 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>TIME_CHECK_ACK</Name><Code>1302</Code></PK_Type>
+      <Info>
+        <FsuCode>51051243812345</FsuCode>
+        <Result>1</Result>
+        <FsuTime>2026-05-26 10:00:00</FsuTime>
+      </Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

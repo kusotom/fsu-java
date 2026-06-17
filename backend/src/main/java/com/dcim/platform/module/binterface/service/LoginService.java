@@ -41,6 +41,9 @@ public class LoginService {
     /** Session 过期秒数（协议默认值：3600 秒） */
     public static final int DEFAULT_EXPIRE_SECONDS = 3600;
 
+    /** BIF2016-REGISTER-INTERVAL-001: 同一 FSU 两次注册最小间隔（秒） */
+    public static final long MIN_REGISTER_INTERVAL_SECONDS = 120;
+
     private final FsuDeviceRepository fsuDeviceRepository;
 
     private final BInterfaceFsuStatusRepository fsuStatusRepository;
@@ -80,25 +83,60 @@ public class LoginService {
 
         FsuDeviceEntity fsu = fsuOpt.get();
         Long fsuId = fsu.getId();
+        LocalDateTime now = LocalDateTime.now();
+        Instant loginInstant = now.atZone(ZoneId.systemDefault()).toInstant();
 
         try {
-            // 生成 Session
-            String sessionId = generateSessionId(fsuCode);
-            LocalDateTime now = LocalDateTime.now();
+            // BIF2016-REGISTER-INTERVAL-001: check last login time for 120s interval
+            Optional<BInterfaceFsuStatusEntity> existingStatus = fsuStatusRepository.findByFsuCode(fsuCode);
+            if (existingStatus.isPresent() && existingStatus.get().getLastLoginTime() != null) {
+                LocalDateTime lastLogin = existingStatus.get().getLastLoginTime();
+                long intervalSeconds = java.time.Duration.between(lastLogin, now).getSeconds();
 
-            // 保存 Session
+                if (intervalSeconds < MIN_REGISTER_INTERVAL_SECONDS) {
+                    // Within 120s — idempotent: reuse existing session, don't create new
+                    String existingSessionId = existingStatus.get().getSessionId();
+                    if (existingSessionId == null || existingSessionId.isEmpty()) {
+                        existingSessionId = generateSessionId(fsuCode);
+                    }
+                    log.info("LOGIN 120s内重复注册: fsuCode={}, interval={}s, decision=ACCEPTED_DUPLICATE, reuseSession={}",
+                            fsuCode, intervalSeconds, existingSessionId);
+
+                    // Update last seen time but preserve session
+                    existingStatus.get().setOnlineStatus("ONLINE");
+                    existingStatus.get().setLoginStatus("LOGIN");
+                    existingStatus.get().setLastLoginTime(now);
+                    existingStatus.get().setUpdatedAt(now);
+                    fsuStatusRepository.save(existingStatus.get());
+                    updateFsuDevice(fsu, now);
+
+                    return LoginResult.successDuplicate(fsuCode, existingSessionId, loginInstant, intervalSeconds);
+                }
+
+                // >= 120s — normal refresh
+                log.info("LOGIN >=120s刷新: fsuCode={}, interval={}s, decision=ACCEPTED_REFRESH",
+                        fsuCode, intervalSeconds);
+
+                String sessionId = generateSessionId(fsuCode);
+                BInterfaceSessionEntity session = createSession(fsuId, fsuCode, sessionId, remoteAddr, now);
+                sessionRepository.save(session);
+                updateFsuStatus(fsuId, fsuCode, sessionId, now);
+                updateFsuDevice(fsu, now);
+
+                return LoginResult.successRefresh(fsuCode, sessionId, loginInstant, intervalSeconds);
+            }
+
+            // First login — normal
+            log.info("LOGIN 首次注册: fsuCode={}, decision=ACCEPTED_NEW", fsuCode);
+
+            String sessionId = generateSessionId(fsuCode);
             BInterfaceSessionEntity session = createSession(fsuId, fsuCode, sessionId, remoteAddr, now);
             sessionRepository.save(session);
-
-            // 更新 FSU 在线状态
             updateFsuStatus(fsuId, fsuCode, sessionId, now);
-
-            // 更新 FSU 设备注册时间
             updateFsuDevice(fsu, now);
 
             log.info("LOGIN 成功: fsuCode={}, sessionId={}", fsuCode, sessionId);
-
-            return LoginResult.success(fsuCode, sessionId, now.atZone(ZoneId.systemDefault()).toInstant());
+            return LoginResult.success(fsuCode, sessionId, loginInstant);
         } catch (Exception e) {
             log.error("LOGIN 处理异常: fsuCode={}", fsuCode, e);
             return LoginResult.fail("5001", "登录处理异常: " + e.getMessage());

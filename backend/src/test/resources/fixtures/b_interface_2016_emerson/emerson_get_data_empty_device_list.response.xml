@@ -1,0 +1,12 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>GET_DATA_ACK</Name><Code>402</Code></PK_Type>
+      <Info>
+        <FSUCode>51051243812345</FSUCode>
+        <Result>1</Result>
+        <DeviceList/>
+      </Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

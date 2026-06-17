@@ -19,7 +19,7 @@ class SetCommandSafetyGateTest {
     @BeforeEach
     void setUp() {
         props = new SetCommandSafetyProperties();
-        gate = new SetCommandSafetyGate(props);
+        gate = new SetCommandSafetyGate(props, null);
     }
 
     // ==================== 默认全 false ====================

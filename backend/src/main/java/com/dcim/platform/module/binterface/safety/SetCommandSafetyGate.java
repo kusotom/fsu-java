@@ -1,5 +1,6 @@
 package com.dcim.platform.module.binterface.safety;
 
+import com.dcim.platform.common.security.audit.AuditLogService;
 import com.dcim.platform.module.binterface.compat.BInterfaceCommandAliasMapper;
 import com.dcim.platform.module.binterface.model.BInterfaceCommand2024;
 import org.slf4j.Logger;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * SET 类命令统一安全门禁 (BIF-P4-SAFE-001)。
+ * SET 类命令统一安全门禁 (BIF-P4-SAFE-001 + BE-AUTH-P0-FIX-001).
  *
  * <p>在所有 SET 类命令执行前调用，判定是否允许、是否需要 dry-run、是否需要确认。
  * 默认全部拒绝，仅显式授权才通过。</p>
@@ -30,27 +31,29 @@ public class SetCommandSafetyGate {
 
     /**
      * BIF2016-SECURITY-001: B接口2016 标准 SET / 控制 / 配置类命令，全部默认高风险禁用。
-     * @see openspec/protocols/binterface-2016/09-security-boundary.md
      */
     static final Set<String> HIGH_RISK_SET_COMMANDS_2016 = Set.of(
             "SET_POINT", "SET_LOGININFO", "SET_FTP", "SET_FSUREBOOT", "SET_THRESHOLD");
 
     private final SetCommandSafetyProperties properties;
+    private final AuditLogService auditLogService;
 
-    public SetCommandSafetyGate(SetCommandSafetyProperties properties) {
+    public SetCommandSafetyGate(SetCommandSafetyProperties properties, AuditLogService auditLogService) {
         this.properties = properties;
+        this.auditLogService = auditLogService;
+    }
+
+    /** BE-AUTH-P0-FIX-001: 审计 SET 拦截 */
+    private void auditBlock(String commandName, String suid, String reasonCode, String reasonMsg) {
+        try {
+            auditLogService.logSetCommandBlocked(commandName, suid, reasonCode + ": " + reasonMsg);
+        } catch (Exception e) {
+            log.warn("SET拦截审计写入失败: command={}, reason={}", commandName, reasonCode, e.getMessage());
+        }
     }
 
     /**
      * 判定 SET 命令是否可以执行。
-     *
-     * @param commandName         原始命令名
-     * @param suid                FSU 编码
-     * @param confirmationToken   确认令牌（null 表示未提供）
-     * @param schedulerTriggered  是否由 Scheduler 触发
-     * @param targetCount         目标数量（>1 表示批量）
-     * @param realCallRequested   是否请求真实执行
-     * @return 安全判定结果
      */
     public SetCommandSafetyDecision evaluate(String commandName, String suid,
                                               String confirmationToken,
@@ -58,12 +61,13 @@ public class SetCommandSafetyGate {
                                               int targetCount,
                                               boolean realCallRequested) {
         if (commandName == null || commandName.trim().isEmpty()) {
+            auditBlock("null", suid, "UNKNOWN_SET_COMMAND", "命令名为空");
             return SetCommandSafetyDecision.builder()
                     .allowed(false).reasonCode("UNKNOWN_SET_COMMAND")
                     .reasonMessage("命令名为空").addError("命令名为空").build();
         }
 
-        // 1. 归一化命令名: 先查旧→新映射, 再查2024标准名
+        // 1. 归一化命令名
         String trimmed = commandName.trim();
         Optional<BInterfaceCommand2024> normOpt = BInterfaceCommandAliasMapper.to2024(trimmed);
         if (normOpt.isEmpty()) normOpt = BInterfaceCommand2024.findByName(trimmed);
@@ -71,12 +75,11 @@ public class SetCommandSafetyGate {
         boolean is2024Set = normOpt.map(c -> SET_COMMAND_CODES.contains(c.getCode())).orElse(false);
         boolean isHighRisk = normOpt.map(c -> HIGH_RISK_CODES.contains(c.getCode())).orElse(false);
         boolean isCompatSet = !is2024Set && isLegacySetCommand(trimmed);
-        // BIF2016-SECURITY-001: compat / legacy SET commands are also high risk
         if (isCompatSet) isHighRisk = true;
 
-        // BIF2016-SECURITY-001: unknown SET_* commands must not default-allow
         boolean isUnknownSet = !is2024Set && !isCompatSet && trimmed.toUpperCase().startsWith("SET_");
         if (isUnknownSet) {
+            auditBlock(commandName, suid, "UNKNOWN_SET_COMMAND", "未知 SET 类命令");
             return SetCommandSafetyDecision.builder()
                     .allowed(false).commandName(commandName).normalizedCommandName(normalized)
                     .suid(suid).highRisk(true)
@@ -108,6 +111,7 @@ public class SetCommandSafetyGate {
 
         // 全局关闭
         if (!globalEnabled) {
+            auditBlock(commandName, suid, "GLOBAL_DISABLED", "全局 SET 门禁未启用");
             return b.allowed(false).dryRun(true).realCallAllowed(false)
                     .reasonCode("GLOBAL_DISABLED").reasonMessage("全局 SET 命令安全门禁未启用")
                     .addError("b-interface.set-command-safety.enabled=false").build();
@@ -115,6 +119,7 @@ public class SetCommandSafetyGate {
 
         // 命令关闭
         if (!cfg.isEnabled()) {
+            auditBlock(commandName, suid, "COMMAND_DISABLED", "命令 " + normalized + " 未启用");
             return b.allowed(false).dryRun(true).realCallAllowed(false)
                     .reasonCode("COMMAND_DISABLED").reasonMessage("命令 " + normalized + " 未启用")
                     .addError("b-interface.set-command-safety.commands." + normalized + ".enabled=false").build();
@@ -122,6 +127,7 @@ public class SetCommandSafetyGate {
 
         // Scheduler 禁止
         if (schedulerTriggered && properties.isSchedulerForbidden()) {
+            auditBlock(commandName, suid, "SCHEDULER_FORBIDDEN", "Scheduler 不允许执行 SET");
             return b.allowed(false).dryRun(false).realCallAllowed(false)
                     .reasonCode("SCHEDULER_FORBIDDEN").reasonMessage("Scheduler 不允许执行 SET 类命令")
                     .addError("SET 类命令禁止由定时调度触发").build();
@@ -129,6 +135,7 @@ public class SetCommandSafetyGate {
 
         // 批量禁止
         if (targetCount > 1 && properties.isSingleFsuOnly()) {
+            auditBlock(commandName, suid, "BATCH_NOT_ALLOWED", "批量 targetCount=" + targetCount);
             return b.allowed(false).dryRun(false).realCallAllowed(false)
                     .reasonCode("BATCH_NOT_ALLOWED").reasonMessage("不允许批量执行 SET 类命令 (targetCount=" + targetCount + ")")
                     .addError("SET 类命令仅允许单台 FSU 执行").build();
@@ -136,6 +143,7 @@ public class SetCommandSafetyGate {
 
         // 确认令牌
         if (cfg.isRequireConfirmation() && (confirmationToken == null || confirmationToken.isEmpty())) {
+            auditBlock(commandName, suid, "CONFIRMATION_REQUIRED", "缺少 confirmationToken");
             return b.allowed(false).dryRun(false).realCallAllowed(false)
                     .reasonCode("CONFIRMATION_REQUIRED").reasonMessage("需要人工确认令牌")
                     .addError("require-confirmation=true, 未提供 confirmationToken").build();
@@ -144,6 +152,7 @@ public class SetCommandSafetyGate {
         // 真实调用检查
         if (!cfg.isAllowRealCall()) {
             if (realCallRequested) {
+                auditBlock(commandName, suid, "REAL_CALL_NOT_ALLOWED", "不允许真实调用");
                 return b.allowed(false).dryRun(true).realCallAllowed(false)
                         .reasonCode("REAL_CALL_NOT_ALLOWED").reasonMessage("命令 " + normalized + " 不允许真实调用")
                         .addError("allow-real-call=false, 只能 dry-run").build();

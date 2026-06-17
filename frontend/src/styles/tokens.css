@@ -1,0 +1,67 @@
+/**
+ * FE-UI-STYLE-REFIT-P1-001: 设计 token — 浅色物联网监控平台视觉基础.
+ * 页面和组件优先使用这些 token，避免在页面内散落硬编码颜色.
+ */
+
+:root {
+  /* ===== 主色 ===== */
+  --app-primary: #2F80ED;
+  --app-primary-hover: #1F6FD8;
+  --app-primary-light: #ECF5FF;
+  --app-primary-soft: #F4F9FF;
+
+  /* ===== 侧边栏 ===== */
+  --app-sidebar-bg: #FFFFFF;
+  --app-sidebar-active: #ECF5FF;
+  --app-sidebar-hover: #F5F9FF;
+  --app-sidebar-text: #526170;
+  --app-sidebar-text-active: #2F80ED;
+  --app-sidebar-border: #E5EAF3;
+
+  /* ===== 背景 ===== */
+  --app-bg: #F5F7FA;
+  --app-card-bg: #FFFFFF;
+  --app-header-bg: #FFFFFF;
+  --app-page-bg: #F5F7FA;
+
+  /* ===== 状态色 ===== */
+  --status-online: #67C23A;
+  --status-offline: #E6A23C;
+  --status-alarm: #F56C6C;
+  --status-warning: #E6A23C;
+  --status-unknown: #909399;
+  --status-protocol: #E6A23C;
+  --status-info: #409EFF;
+  --status-muted: #A8ABB2;
+
+  /* ===== 告警等级 ===== */
+  --alarm-critical: #B91C1C;
+  --alarm-major: #F56C6C;
+  --alarm-minor: #E6A23C;
+  --alarm-warning: #E6A23C;
+  --alarm-info: #409EFF;
+
+  /* ===== 文字 ===== */
+  --text-primary: #1F2D3D;
+  --text-secondary: #606266;
+  --text-muted: #909399;
+  --text-placeholder: #A8ABB2;
+
+  /* ===== 边框 ===== */
+  --border-light: #E5EAF3;
+  --border-normal: #DCE3EC;
+  --border-strong: #CDD6E3;
+
+  /* ===== 圆角 ===== */
+  --radius-card: 8px;
+  --radius-panel: 8px;
+  --radius-control: 6px;
+
+  /* ===== 阴影 ===== */
+  --shadow-card: 0 8px 22px rgba(31, 45, 61, 0.05);
+  --shadow-card-hover: 0 12px 28px rgba(47, 128, 237, 0.12);
+  --shadow-drawer: -4px 0 16px rgba(31, 45, 61, 0.08);
+
+  /* ===== 字号 ===== */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

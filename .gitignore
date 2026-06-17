@@ -21,3 +21,5 @@ logs/
 # Env
 .env
 .env.local
+backend/target/
+scripts/fsu-remote-comm-check.env.remote

@@ -1,0 +1,15 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Response>
+    <PK_Type>
+        <Name>GET_FSUINFO_ACK</Name>
+        <Code>1702</Code>
+    </PK_Type>
+    <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <TFSUStatus>
+            <CPUUsage>18.94</CPUUsage>
+            <MEMUsage>55.37</MEMUsage>
+        </TFSUStatus>
+        <Result>0</Result>
+    </Info>
+</Response></soap:Body></soap:Envelope>

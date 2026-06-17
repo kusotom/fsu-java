@@ -1,0 +1,8 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Response>
+      <PK_Type><Name>LOGIN_ACK</Name><Code>102</Code></PK_Type>
+      <Info><Result>0</Result></Info>
+    </Response>
+  </soap:Body>
+</soap:Envelope>

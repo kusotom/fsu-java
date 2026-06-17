@@ -1,6 +1,7 @@
 <template>
   <div>
-    <PageHeader title="站点管理" description="管理铁塔站点、机房、户外柜所属站址" />
+    <PageHeader title="站点监控" description="按站点组织机房、户外柜、FSU 绑定关系与实时数据入口" />
+    <SiteMonitorTabs />
     <SearchPanel v-model="search" @search="fetchData" @reset="resetSearch">
       <el-form-item label="编码"><el-input v-model="search.siteCode" placeholder="站点编码" clearable /></el-form-item>
       <el-form-item label="名称"><el-input v-model="search.siteName" placeholder="站点名称" clearable /></el-form-item>
@@ -10,7 +11,11 @@
     <el-card>
       <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="siteCode" label="站点编码" width="120" />
+        <el-table-column label="站点编码" width="140">
+          <template #default="{ row }">
+            <span>{{ fsuCodesBySiteId[row.id] || row.siteCode }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="siteName" label="站点名称" min-width="160" />
         <el-table-column prop="region" label="区域" width="120" />
         <el-table-column prop="address" label="地址" min-width="180" />
@@ -38,15 +43,35 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@/components/PageHeader.vue'
 import SearchPanel from '@/components/SearchPanel.vue'
-import { getSites, createSite, updateSite, deleteSite } from '@/api/resource'
+import SiteMonitorTabs from '@/components/SiteMonitorTabs.vue'
+import { getSites, createSite, updateSite, deleteSite, getFsuDevices } from '@/api/resource'
 import type { Site } from '@/types'
+
+/** SITE-FSU-CODE-BINDING-FIX-001: siteId → FSU 编码映射 */
+const fsuCodesBySiteId = ref<Record<number, string>>({})
 
 const loading = ref(false); const saving = ref(false)
 const tableData = ref<Site[]>([]); const dialogVisible = ref(false); const editingId = ref<number | null>(null)
 const search = reactive({ siteCode: '', siteName: '', status: '' })
 const form = reactive<Site>({ siteCode: '', siteName: '', status: 'ACTIVE' })
 
-async function fetchData() { loading.value = true; try { const res: any = await getSites(); tableData.value = res.data || [] } catch { tableData.value = [] } finally { loading.value = false } }
+async function fetchData() {
+  loading.value = true
+  try {
+    const [res, fsusRes] = await Promise.all([getSites(), getFsuDevices().catch(() => null)]) as any[]
+    tableData.value = res.data || []
+    // SITE-FSU-CODE-BINDING-FIX-001: 构建 siteId → FSU编码 映射
+    const fsus = Array.isArray(fsusRes?.data) ? fsusRes.data : (Array.isArray(fsusRes) ? fsusRes : [])
+    const map: Record<number, string> = {}
+    for (const f of fsus) {
+      if (f.siteId != null && f.fsuCode) {
+        const sid = Number(f.siteId)
+        map[sid] = map[sid] ? map[sid] + ', ' + f.fsuCode : f.fsuCode
+      }
+    }
+    fsuCodesBySiteId.value = map
+  } catch { tableData.value = [] } finally { loading.value = false }
+}
 function resetSearch() { search.siteCode = ''; search.siteName = ''; search.status = ''; fetchData() }
 function openDialog(row?: Site) { editingId.value = row?.id ?? null; if (row) Object.assign(form, row); dialogVisible.value = true }
 function resetForm() { editingId.value = null; Object.assign(form, { siteCode: '', siteName: '', status: 'ACTIVE' }) }

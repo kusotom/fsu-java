@@ -1,0 +1,29 @@
+<Request>
+  <PK_Type>
+    <Name>GET_DATA</Name>
+    <Code>401</Code>
+  </PK_Type>
+  <Info>
+    <FsuId>51051243812345</FsuId>
+    <FsuCode>51051243812345</FsuCode>
+    <DeviceList>
+      <Device Code="51051241820004" Id="51051241820004">
+        <Id>418002001</Id>
+      </Device>
+      <Device Code="51051241830004" Id="51051241830004">
+        <Id>418004001</Id>
+        <Id>418007001</Id>
+        <Id>418101001</Id>
+        <Id>418102001</Id>
+      </Device>
+      <Device Code="51051241840004" Id="51051241840004">
+        <Id>418001001</Id>
+      </Device>
+      <Device Code="51051240700002" Id="51051240700002">
+        <Id>407102001</Id>
+        <Id>407103001</Id>
+        <Id>407107001</Id>
+      </Device>
+    </DeviceList>
+  </Info>
+</Request>

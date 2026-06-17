@@ -1,0 +1,3 @@
+signalId,signalName,signalCategory,signalType,unit,valueMeaningsRaw,sourceRef,note
+0407102001,总电压,AI/模拟量,AI,V,,openspec/protocols/binterface-2016/dictionaries/standard-signal-dictionary-index.md,D类机房蓄电池组总电压；Excel行67；真实历史样本54.2
+0407107001,后半组电压,AI/模拟量,AI,,,openspec/protocols/binterface-2016/dictionaries/standard-signal-dictionary-index.md,D类机房蓄电池组后半组电压；Excel行70；原始单位列为空，单位待确认

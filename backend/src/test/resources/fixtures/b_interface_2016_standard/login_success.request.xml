@@ -1,0 +1,13 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Request>
+      <PK_Type><Name>LOGIN</Name><Code>101</Code></PK_Type>
+      <Info>
+        <FsuId>51051243812345</FsuId>
+        <FsuCode>51051243812345</FsuCode>
+        <UserName>fsu_user</UserName>
+        <PassWord>placeholder_not_real</PassWord>
+      </Info>
+    </Request>
+  </soap:Body>
+</soap:Envelope>

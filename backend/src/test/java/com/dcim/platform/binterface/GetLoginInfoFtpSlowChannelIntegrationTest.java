@@ -86,7 +86,7 @@ class GetLoginInfoFtpSlowChannelIntegrationTest {
         CommandResult result = getLoginInfoHandler.handle(createLoginInfoContext("FSU-001"));
 
         assertTrue(result.isSuccess());
-        assertEquals("0", result.getResultCode());
+        assertEquals("1", result.getResultCode(), "Result=1 SUCCESS per 2016 EnumResult");
         assertNotNull(result.toXmlDataXml());
     }
 
